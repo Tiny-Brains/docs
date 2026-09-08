@@ -1,0 +1,61 @@
+# The trial
+
+A trial is one ordinary game played before a verified candidate becomes active.
+It has a match ID, a preset, results, and a replay when successfully recorded, but
+**it updates no ladder**, including the opponent's.
+
+## Who you play
+
+The current matchmaker seats the candidate against active platform baselines
+in the same season. It chooses the preset by trial-attempt order; you do not
+choose the opponent or map. A two-seat Ants trial needs one runnable baseline.
+Trial work is prioritized when workers claim queued games, but still needs
+compatible capacity and those baseline assets.
+
+Only one live trial may exist for a candidate at a time. A replacement trial can
+be scheduled if an earlier one fails for reasons not attributed to the candidate.
+
+## Why losing is fine
+
+A completed trial passes when the candidate's strike count is below the forfeit
+limit. Its finishing rank is irrelevant. A loss or draw with valid turn answers
+is sufficient; the ladder will estimate playing strength after promotion.
+
+At current settings, five cumulative failed answers cause a forfeit and rejection
+with `FORFEIT`. The failures need not be consecutive. Reaching an ordinary game
+ending such as a food stalemate is not itself a trial failure.
+
+
+> **Replay visualiser — planned:** Show a recorded losing trial that passed, with final rank and candidate strike count. Explain that playability, rather than victory, determines promotion.
+
+<!-- replay-visualiser: trial-playability
+Use a recorded replay and its matching engine digest; select the relevant turns.
+Provide a text caption and retain the explanation above as the accessible fallback.
+Replay asset and turn range: to be selected. No synthetic match result is implied.
+-->
+
+## When a trial fails
+
+| Outcome | Candidate consequence |
+|---|---|
+| Finished below the strike limit | Promote to active |
+| Finished at the forfeit limit | Reject with `FORFEIT` |
+| Execution failure attributed to the candidate's seat | Reject with `FAULT:<reason>` |
+| Cancelled or failed for another reason | Attempt another trial within the repair limit |
+| Repeated unsuccessful trial attempts exhaust the limit | Reject with `UNPLAYABLE` |
+
+The current repair limit is three trial rows. Infrastructure failures can therefore
+prevent admission to the ladder without establishing that the strategy is wrong.
+Read the failure attribution before changing your model.
+
+## How long you wait
+
+The version stays `verified` during queueing and play. Read its `trial.status`:
+`pending` is queued, `claimed` is assigned to a worker, and `running` is in progress.
+`finished` can briefly precede the verdict because counting is asynchronous.
+A verified candidate continues to occupy your one in-flight slot.
+
+A trial can take many turns, and a busy or unavailable arena can add queue time.
+If the wait is unexpectedly long, retain the candidate and trial IDs and ask the
+operator to check the queue and compatible worker. Repeated submission is not a
+way to accelerate an existing trial.

@@ -1,0 +1,25 @@
+[book]
+title = "TinyBrains"
+description = "Build small neural networks, compete in strategy games, and improve your models. A guide for TinyBrains competitors."
+authors = []
+language = "en"
+src = "src"
+
+[build]
+build-dir = "book"
+create-missing = false          # a SUMMARY entry with no file is an error, not a new stub
+
+[output.html]
+default-theme = "navy"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/Tiny-Brains/docs"
+# {path} already carries the src/ prefix, and this book.toml is the repository root.
+edit-url-template = "https://github.com/Tiny-Brains/docs/edit/main/{path}"
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.search]
+enable = true
+limit-results = 20
