@@ -7,10 +7,10 @@ repositories are separate Git checkouts even when developed under one parent.
 
 ## Choosing work
 
-The `design/v2` documents describe the current architecture and decisions; their
-tracker and gap documents distinguish implemented behavior from unfinished work.
-Older design documents remain useful background, but verify claims against the
-current producer and consumer before copying them into code or docs.
+Each repository carries its own design documents under `docs/`, and DevOps carries
+the whole-system map, the decision log, the deployment design, and the Orion notes.
+Verify claims against the current producer and consumer before copying them into
+code or docs.
 
 Concrete open areas include the browser replay viewer and envelope integration,
 a cartridge-owned reference observation set, competitor tooling, and production
