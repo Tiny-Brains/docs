@@ -17,6 +17,26 @@
     return typeof path_to_root === "string" ? path_to_root : "";
   }
 
+  // mdBook's five themes, sorted into the two the viewer knows. The viewer's chrome otherwise
+  // answers `prefers-color-scheme`, which is the operating system's opinion and not the reader's:
+  // a book left on `coal` while the machine is in light mode would carry a white player.
+  var DARK = { coal: 1, navy: 1, ayu: 1 };
+
+  function bookTheme() {
+    var cls = document.documentElement.className.split(/\s+/);
+    for (var i = 0; i < cls.length; i++) if (DARK[cls[i]]) return "dark";
+    return "light";
+  }
+
+  // The viewer reads `data-tb-theme` in CSS alone, so following the theme switch is an attribute
+  // write. Re-mounting would decode the whole match again to change a colour.
+  function dress(els) {
+    var t = bookTheme();
+    els.forEach(function (el) {
+      el.dataset.tbTheme = t;
+    });
+  }
+
   function fallback(el, message) {
     el.innerHTML =
       '<p style="margin:0;padding:12px;border:1px solid currentColor;border-radius:6px;opacity:.7">' +
@@ -46,6 +66,11 @@
             fallback(el, "This replay could not be loaded: " + e.message);
           });
         });
+
+        dress(slots);
+        new MutationObserver(function () {
+          dress(slots);
+        }).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
       })
       .catch(function (e) {
         slots.forEach(function (el) {
