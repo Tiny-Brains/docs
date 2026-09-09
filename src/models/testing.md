@@ -9,7 +9,7 @@ forward pass alone does not show that an entry plays valid or useful actions.
 The current deployment falls back to a single observation from Axon's
 `tests/fixtures/ants-observation.json` unless a cartridge-owned reference file is
 available. Ants does not yet ship that complete conformance observation set.
-The existing fixture represents a large, partially explored 128 × 128 game.
+The existing fixture represents a large, partially explored 128 × 128 board.
 
 Include every preset size, sparse and crowded positions, no visible enemies or
 food, fragmented known water, and ants near wrapping borders in your own tests.

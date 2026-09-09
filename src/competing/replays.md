@@ -55,7 +55,7 @@ The prose above the slot stands alone: a page whose viewer fails to load still t
 
 ## Using replay examples in this book
 
-Planned visualisers are marked beside explanations where a real game helps.
+Planned visualisers are marked beside explanations where a real match helps.
 Each example should identify its replay asset, engine digest, relevant turns,
 player perspective, and explanatory caption. No match IDs or outcomes are
 invented for these placeholders.

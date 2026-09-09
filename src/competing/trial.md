@@ -1,6 +1,6 @@
 # The trial
 
-A trial is one ordinary game played before a verified candidate becomes active.
+A trial is one ordinary match played before a verified candidate becomes active.
 It has a match ID, a preset, results, and a replay when successfully recorded, but
 **it updates no ladder**, including the opponent's.
 
@@ -22,7 +22,7 @@ limit. Its finishing rank is irrelevant. A loss or draw with valid turn answers
 is sufficient; the ladder will estimate playing strength after promotion.
 
 At current settings, five cumulative failed answers cause a forfeit and rejection
-with `FORFEIT`. The failures need not be consecutive. Reaching an ordinary game
+with `FORFEIT`. The failures need not be consecutive. Reaching an ordinary match
 ending such as a food stalemate is not itself a trial failure.
 
 
