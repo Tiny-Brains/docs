@@ -25,12 +25,13 @@ Start with [Ants](games/ants.md) for the game overview, then read about
 [the world](games/ants/world.md), [a turn](games/ants/turn.md), and
 [ending and scoring](games/ants/scoring.md).
 
-> **Replay visualiser — planned:** Show a short recorded Ants match illustrating growth, exploration, and a hill attack, with a toggle for the model’s limited view.
+<div class="tb-replay" data-src="tutorials/real-match.json" data-turn="1"></div>
 
-<!-- replay-visualiser: introduction-match
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<p class="tb-replay-caption">A finished match, replayed from its recorded actions by the same cartridge that refereed it. Every match on the ladder produces one of these.</p>
+
+<!-- replay-visualiser: introduction-match — filled.
+Asset: tutorials/real-match.json, turn 1. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->
 
 ## What you build

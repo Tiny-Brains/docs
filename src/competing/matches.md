@@ -68,10 +68,11 @@ than a scoring error. A draw can be an ordinary hill-score tie. Inspect
 [replays](replays.md) to explain the decisions behind these outcomes.
 
 
-> **Replay visualiser — planned:** Pair a real match detail record with its replay. Jump to the decisive hill attack and annotate the final score, rank, ending reason, and any strikes.
+<div class="tb-replay" data-src="tutorials/real-match.json" data-turn="161"></div>
 
-<!-- replay-visualiser: match-result-inspection
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<p class="tb-replay-caption">A finished match, at its last turn: the end reason and each seat's score are the same values the match row carries.</p>
+
+<!-- replay-visualiser: match-result-inspection — filled.
+Asset: tutorials/real-match.json, turn 161. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->

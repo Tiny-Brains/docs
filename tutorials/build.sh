@@ -23,8 +23,11 @@ done
 
 echo "==> replays"
 mkdir -p replays
-for spec in [0-9]-*.json; do
-  tinybrains "$spec" --out replays | sed -n 's/^\([0-9]\)/    \1/p'
+# Every scenario spec in this directory. `real-match.json` under replays/ is NOT one: it is a real
+# match, captured from a running stack, and it is copied rather than regenerated -- the digest
+# check below is what catches it going stale.
+for spec in *.json; do
+  tinybrains "$spec" --out replays | grep -E "turns  board" | sed 's/^/    /'
 done
 
 echo "==> into the book"
@@ -38,13 +41,23 @@ VIZ="${ANTS_DIR:-../../ants}/viz/dist"
 [ -d "$VIZ" ] || { echo "no viewer at $VIZ -- run ants/viz/build.sh" >&2; exit 1; }
 cp -R "$VIZ/." ../src/viz/
 
-built=$(python3 -c "import json;print(json.load(open('../src/viz/engine.json'))['engine_digest'])")
-played=$(python3 -c "import json,glob;print(json.load(open(sorted(glob.glob('replays/*.json'))[0]))['engine_digest'])")
-if [ "$built" != "$played" ]; then
-  echo "    MISMATCH" >&2
-  echo "      the replays were played on $played" >&2
-  echo "      the viewer was built against $built" >&2
-  echo "    rebuild ants, then re-run this" >&2
-  exit 1
-fi
-echo "    viewer and replays agree on ${built%${built#sha256:???????}}..."
+# EVERY replay, not the first one. A captured match is copied rather than regenerated, so it is
+# exactly the file that goes stale without anyone noticing -- and a viewer re-simulating with the
+# wrong engine does not fail, it draws a plausible match that never happened.
+python3 - <<'CHECKEOF'
+import glob, json, sys
+built = json.load(open("../src/viz/engine.json"))["engine_digest"]
+bad = []
+for f in sorted(glob.glob("replays/*.json")):
+    played = json.load(open(f)).get("engine_digest")
+    if played != built:
+        bad.append((f, played))
+if bad:
+    print("    MISMATCH -- the viewer was built against", built, file=sys.stderr)
+    for f, played in bad:
+        print(f"      {f} was played on {played}", file=sys.stderr)
+    print("    regenerate the scenarios, or re-capture the match, against the current engine",
+          file=sys.stderr)
+    sys.exit(1)
+print(f"    {len(glob.glob('replays/*.json'))} replays agree with the viewer on {built[:14]}...")
+CHECKEOF

@@ -1,0 +1,35 @@
+{
+  "id": "lesson-movement",
+  "preset": "standard",
+  "rows": 8,
+  "cols": 12,
+  "players": 2,
+  "water": [
+    0,
+    27,
+    1,
+    2,
+    0,
+    52,
+    1,
+    2,
+    0,
+    13
+  ],
+  "hills": [
+    [
+      1,
+      1
+    ],
+    [
+      5,
+      7
+    ]
+  ],
+  "food": [],
+  "food_target": 0,
+  "symmetry": {
+    "dr": 4,
+    "dc": 6
+  }
+}

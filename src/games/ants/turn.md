@@ -37,10 +37,9 @@ arrives at the bottom, because the board wraps.
 <p class="tb-replay-caption">Movement, blocking and wrapping on an eight-by-twelve board. The
 opposing ant holds still throughout, so nothing here is combat.</p>
 
-<!-- replay-visualiser: turn-collision
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<!-- replay-visualiser: turn-collision — filled.
+Asset: tutorials/1-movement.json, turn 6. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->
 
 ## Combat
@@ -76,10 +75,9 @@ and both die. Step through it: the ants meet on turn 3, and turn 4 has neither o
 engine from a written script. Use the arrow keys to step a turn at a time; click a cell to see what
 is on it.</p>
 
-<!-- replay-visualiser: turn-focus-combat
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<!-- replay-visualiser: turn-focus-combat — filled.
+Asset: tutorials/2-fight.json, turn 3. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->
 
 ## Razing a hill
@@ -110,12 +108,13 @@ Food gathered on this turn can spawn **next turn at the earliest**. Vacating a
 hill while another ant gathers nearby is therefore a useful growth pattern.
 
 
-> **Replay visualiser — planned:** Follow a recorded food collection over two turns. Label the hive increase, the later spawn, and a turn where an occupied hill blocks spawning.
+<div class="tb-replay" data-src="tutorials/4-growth.json" data-turn="2" data-zoom="6"></div>
 
-<!-- replay-visualiser: turn-spawn-delay
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<p class="tb-replay-caption">Turn 0 gathers the food beside the hill. Turn 1 steps off the hill and the ant appears — the food gathered on one turn becomes an ant on the next, and never sooner. Turn 2 walks both ants into one square, and both die. Played by the engine from a written script, so the rule happens exactly. Arrow keys step a turn at a time; click a cell to see what is on it.</p>
+
+<!-- replay-visualiser: turn-spawn-delay — filled.
+Asset: tutorials/4-growth.json, turn 2. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->
 
 ## Sending nothing

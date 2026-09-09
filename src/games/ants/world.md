@@ -22,12 +22,13 @@ distance_squared = dr * dr + dc * dc
 This same geometry controls vision, fighting, and food collection.
 
 
-> **Replay visualiser — planned:** Step through a recorded border crossing. Highlight the departure and arrival cells, plus a vision or combat radius spanning that boundary.
+<div class="tb-replay" data-src="tutorials/1-movement.json" data-turn="6" data-zoom="6"></div>
 
-<!-- replay-visualiser: world-wrapping
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<p class="tb-replay-caption">The ant leaves the top edge on turn 6 and arrives at the bottom. The board is a torus: there are no corners to defend and no edge to be pinned against.</p>
+
+<!-- replay-visualiser: world-wrapping — filled.
+Asset: tutorials/1-movement.json, turn 6. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->
 
 ## Terrain and water
@@ -68,12 +69,16 @@ enemies, food, or hills in the observation. There is no turn number, score, hive
 count, explicit visibility mask, or model state carried between calls.
 
 
-> **Replay visualiser — planned:** Show the same recorded turns with full-board and player-view modes. Mark an enemy disappearing from sight while discovered water remains known.
+> **The viewer cannot show this yet.** A replay frame carries the board as the *referee*
+sees it — every ant, all the water — because that is what re-simulating an action stream
+reconstructs. What a seat *knew* at a turn is a different thing, and `replay-decode` does
+not answer it. Until it does, a replay here would show the opposite of the point.
 
-<!-- replay-visualiser: world-fog
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<!-- replay-visualiser: world-fog — BLOCKED, and deliberately empty.
+Needs a seat view: `replay-decode` answering "what did seat N see on turn T", which is
+`observe` applied to a re-simulated state. Cheap to add (one optional argument, decoded
+for the shown turn only) and an ABI change, so it is a decision rather than a task.
+Do NOT fill this with a ground-truth replay: it would teach the reader the opposite.
 -->
 
 ## Symmetry and presets

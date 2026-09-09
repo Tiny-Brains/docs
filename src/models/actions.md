@@ -55,10 +55,11 @@ runs before hill razing. Evaluate outcomes using the [turn rules](../games/ants/
 not only the validity of the direction strings.
 
 
-> **Replay visualiser — planned:** Show a recorded observation with ordered move arrows, then the resulting frame. Explain any differences caused by water, collisions, or combat.
+<div class="tb-replay" data-src="tutorials/1-movement.json" data-turn="4" data-zoom="6"></div>
 
-<!-- replay-visualiser: actions-to-outcomes
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<p class="tb-replay-caption">Eight orders, and what the engine did with them. Two of the moves are refused by water on turns 3 and 4 — the ant stays put — and one crosses the wrapping edge. Played by the engine from a written script, so the rule happens exactly. Arrow keys step a turn at a time; click a cell to see what is on it.</p>
+
+<!-- replay-visualiser: actions-to-outcomes — filled.
+Asset: tutorials/1-movement.json, turn 4. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->

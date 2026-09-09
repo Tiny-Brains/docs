@@ -23,12 +23,13 @@ for understanding movement and food collection, but its rectangular dimensions
 also expose adapters that accidentally assume `rows == columns`.
 
 
-> **Replay visualiser — planned:** Show the opening of a recorded standard match with dimensions and paired starting hills labelled. Keep full-board terrain separate from either player’s initial knowledge.
+<div class="tb-replay" data-src="tutorials/preset-standard.json"></div>
 
-<!-- replay-visualiser: maps-standard
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<p class="tb-replay-caption">A <code>standard</code> board: 64 by 96, moderate water. Turn zero, both hills visible. Scroll to zoom, drag to pan.</p>
+
+<!-- replay-visualiser: maps-standard — filled.
+Asset: tutorials/preset-standard.json, turn 0. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->
 
 ## Maze
@@ -39,12 +40,13 @@ avoids repeatedly ordering ants into water or sending several ants into the same
 narrow destination.
 
 
-> **Replay visualiser — planned:** Follow a recorded colony through a narrow passage and highlight a routing or congestion decision.
+<div class="tb-replay" data-src="tutorials/preset-maze.json"></div>
 
-<!-- replay-visualiser: maps-maze
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<p class="tb-replay-caption">A <code>maze</code> board: 96 by 96 and far denser water, so routes matter more than distance.</p>
+
+<!-- replay-visualiser: maps-maze — filled.
+Asset: tutorials/preset-maze.json, turn 0. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->
 
 ## Cell
@@ -54,12 +56,13 @@ more than twice as many cells as standard, so this preset is an important test
 of inference cost and adapter headroom as well as strategy.
 
 
-> **Replay visualiser — planned:** Show a recorded cell match with dispersed scouting groups and the growth of known water over time.
+<div class="tb-replay" data-src="tutorials/preset-cell.json"></div>
 
-<!-- replay-visualiser: maps-cell
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<p class="tb-replay-caption">A <code>cell</code> board: 128 by 128, the largest, with water in fatter blobs and more open ground between them.</p>
+
+<!-- replay-visualiser: maps-cell — filled.
+Asset: tutorials/preset-cell.json, turn 0. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->
 
 ## Symmetric starts, varied matches

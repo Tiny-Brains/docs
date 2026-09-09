@@ -19,12 +19,13 @@ For example, in a two-player match with one hill each, a successful raze gives
 the attacker 2 and the defender −1. Having more ants does not add a tiebreaker.
 
 
-> **Replay visualiser — planned:** Show a recorded hill raze with score changes, then the final standings. Include a lone-survivor bonus example if a suitable replay is available.
+<div class="tb-replay" data-src="tutorials/3-raze.json" data-turn="7" data-zoom="5"></div>
 
-<!-- replay-visualiser: scoring-hill-result
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<p class="tb-replay-caption">The attacker reaches the hill on turn 7: +2 to it, −1 to the owner. Played by the engine from a written script, so the rule happens exactly. Arrow keys step a turn at a time; click a cell to see what is on it.</p>
+
+<!-- replay-visualiser: scoring-hill-result — filled.
+Asset: tutorials/3-raze.json, turn 7. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->
 
 ## How a match ends

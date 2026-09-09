@@ -44,12 +44,13 @@ Until that integration exists, retain the raw JSON and match metadata for
 inspection; do not interpret a missing viewer as a missing match result.
 
 
-> **Replay visualiser — planned:** Embed an actual recorded match with play/pause, turn stepping, speed, score, and full-board/player-view controls. Resolve the envelope initialization and matching-engine contract before enabling playback.
+<div class="tb-replay" data-src="tutorials/real-match.json" data-turn="20"></div>
 
-<!-- replay-visualiser: replay-viewer
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<p class="tb-replay-caption">The replay viewer. It re-simulates from the recorded action stream using the cartridge that played the match, so what you see is what happened.</p>
+
+<!-- replay-visualiser: replay-viewer — filled.
+Asset: tutorials/real-match.json, turn 20. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->
 
 ## Using replay examples in this book

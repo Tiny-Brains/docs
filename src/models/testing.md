@@ -106,10 +106,11 @@ from tactical weaknesses. Keep the release tag, model ID, and hashes with your
 training notes so results remain attributable to the version that produced them.
 
 
-> **Replay visualiser — planned:** Replay a recorded local test match with checkpoints for an unexpected hold, collision, or failed hill attack. Pair each checkpoint with the actual observation and returned action.
+<div class="tb-replay" data-src="tutorials/4-growth.json" data-turn="2" data-zoom="6"></div>
 
-<!-- replay-visualiser: testing-behaviour
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<p class="tb-replay-caption">Stepping a replay is how an unexpected result gets explained: here, why an ant did not appear until a turn after the food was gathered, and why two ants vanished at once.</p>
+
+<!-- replay-visualiser: testing-behaviour — filled.
+Asset: tutorials/4-growth.json, turn 2. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->

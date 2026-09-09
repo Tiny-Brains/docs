@@ -56,6 +56,21 @@ the rule, and that is why the fallback is a sentence rather than a broken frame.
 | `1-movement` | Walking, water refusing a move on turns 3 and 4, and the board wrapping from the top edge to the bottom |
 | `2-fight` | One against one, equal focus, both die |
 | `3-raze` | An ant reaching the enemy hill: +2 to the razer, −1 to the owner, `lone_survivor` |
+| `4-growth` | Food gathered on one turn becoming an ant on the next, then two friendly ants walking into one square |
+| `preset-*` | One turn on a real catalogue board, so a page can show the terrain a preset is played on |
+| `real-match.json` | **Captured, not generated.** A real match between the sample models, copied from a running stack. `build.sh` does not regenerate it — the digest check is what catches it going stale |
+
+## What the viewer cannot show
+
+**Fog.** A replay frame carries the board as the *referee* sees it — every ant, all the water —
+because that is what re-simulating an action stream reconstructs. What a seat *knew* at a turn is a
+different question and `replay-decode` does not answer it. So `world-fog` and `observation-payload`
+are deliberately empty, with a note saying why: a ground-truth replay in either place would teach
+the reader the opposite of the point.
+
+Filling them needs a **seat view** — `replay-decode` answering "what did seat N see on turn T",
+which is `observe` applied to a re-simulated state. It is cheap (one optional argument, decoded for
+the shown turn only) and it is an ABI change, so it is a decision rather than a task.
 
 ## What can go stale
 

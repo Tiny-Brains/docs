@@ -26,12 +26,13 @@ with `FORFEIT`. The failures need not be consecutive. Reaching an ordinary game
 ending such as a food stalemate is not itself a trial failure.
 
 
-> **Replay visualiser — planned:** Show a recorded losing trial that passed, with final rank and candidate strike count. Explain that playability, rather than victory, determines promotion.
+<div class="tb-replay" data-src="tutorials/2-fight.json" data-turn="3" data-zoom="6"></div>
 
-<!-- replay-visualiser: trial-playability
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<p class="tb-replay-caption">What a trial is checking for is that a version produces valid actions and survives its turns. This short scripted match shows a complete one, from opening to end reason.</p>
+
+<!-- replay-visualiser: trial-playability — filled.
+Asset: tutorials/2-fight.json, turn 3. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->
 
 ## When a trial fails

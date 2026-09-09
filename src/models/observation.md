@@ -74,10 +74,14 @@ water field does not say the whole board is land; it says there is no discovered
 water in this view. The enemy and food coordinates are within current vision.
 
 
-> **Replay visualiser — planned:** Select one turn from a real replay and display a player’s observation beside the full board. Highlight each JSON field and the ants’ action ordering; hide privileged state in player-view mode.
+> **The viewer cannot show this yet.** A replay frame carries the board as the *referee*
+sees it — every ant, all the water — because that is what re-simulating an action stream
+reconstructs. What a seat *knew* at a turn is a different thing, and `replay-decode` does
+not answer it. Until it does, a replay here would show the opposite of the point.
 
-<!-- replay-visualiser: observation-payload
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<!-- replay-visualiser: observation-payload — BLOCKED, and deliberately empty.
+Needs a seat view: `replay-decode` answering "what did seat N see on turn T", which is
+`observe` applied to a re-simulated state. Cheap to add (one optional argument, decoded
+for the shown turn only) and an ABI change, so it is a decision rather than a task.
+Do NOT fill this with a ground-truth replay: it would teach the reader the opposite.
 -->

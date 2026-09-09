@@ -34,7 +34,10 @@ def main():
     ap.add_argument("--id", required=True)
     ap.add_argument("--preset", default="standard", help="the pool this board belongs to, as a label")
     ap.add_argument("--players", type=int, default=2)
-    ap.add_argument("--food-target", type=int, default=0,
+    # `default=None`, not 0: `--food-target 0` means "nothing respawns", and a falsy check turned
+    # that into "keep as much as you drew" -- so a lesson about gathering had food that never
+    # disappeared, because it was replaced the same turn.
+    ap.add_argument("--food-target", type=int, default=None,
                     help="how much food the board is kept stocked with; 0 means none respawns")
     args = ap.parse_args()
 
@@ -98,7 +101,7 @@ def main():
         "water": rle,
         "hills": [list(p) for p in all_hills],
         "food": [list(p) for p in all_food],
-        "food_target": args.food_target or len(all_food),
+        "food_target": args.food_target if args.food_target is not None else len(all_food),
         "symmetry": {"dr": dr, "dc": dc},
     }, sys.stdout, indent=2)
     print()

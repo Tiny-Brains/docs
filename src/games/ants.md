@@ -55,10 +55,11 @@ Match records identify the engine used to play them; replay reconstruction must
 use that engine version.
 
 
-> **Replay visualiser — planned:** Play a short complete match with colony colours, hills, food, and score labelled. Allow switching between the full board and each competitor’s fog-filtered view.
+<div class="tb-replay" data-src="tutorials/real-match.json" data-turn="40"></div>
 
-<!-- replay-visualiser: ants-overview
-Use a recorded replay and its matching engine digest; select the relevant turns.
-Provide a text caption and retain the explanation above as the accessible fallback.
-Replay asset and turn range: to be selected. No synthetic match result is implied.
+<p class="tb-replay-caption">A real match between the two sample models, on a <code>standard</code> board. Neither plays well: one marches in a straight line and the other never moves, so the match ends in the food stalemate after 161 turns.</p>
+
+<!-- replay-visualiser: ants-overview — filled.
+Asset: tutorials/real-match.json, turn 40. Regenerate with tutorials/build.sh.
+The prose above the slot stands alone: a page whose viewer fails to load still teaches the rule.
 -->
