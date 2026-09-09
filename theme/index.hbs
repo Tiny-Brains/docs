@@ -1,0 +1,481 @@
+<!DOCTYPE HTML>
+{{!--
+    mdBook 0.5.4's own index.hbs, VENDORED AND EDITED. Every change is marked with a
+    `TINYBRAINS` comment; everything else is upstream's, untouched, and book.js is upstream's
+    too -- it reaches for .menu-title, #mdbook-theme-toggle and #mdbook-theme-list by name and
+    throws if any of them is missing, so this file dresses those elements rather than replacing
+    them.
+
+    ON AN mdBook UPGRADE, re-diff this against `mdbook init --theme` from the new version and
+    re-apply the marked blocks. Nothing at build time notices a template that has fallen behind.
+--}}
+<html lang="{{ language }}" class="{{ default_theme }} sidebar-visible" dir="{{ text_direction }}">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>{{ title }}</title>
+        {{#if is_print }}
+        <meta name="robots" content="noindex">
+        {{/if}}
+        {{#if base_url}}
+        <base href="{{ base_url }}">
+        {{/if}}
+
+
+        <!-- Custom HTML head -->
+        {{> head}}
+
+        <meta name="description" content="{{ description }}">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        {{!-- TINYBRAINS: theme/favicon.svg is the application's logo-network.svg. The PNG link
+              upstream ships beside it is dropped rather than answered with a second mark. --}}
+        {{#if favicon_svg}}
+        <link rel="icon" href="{{ resource "favicon.svg" }}">
+        {{/if}}
+        <link rel="stylesheet" href="{{ resource "css/variables.css" }}">
+        <link rel="stylesheet" href="{{ resource "css/general.css" }}">
+        <link rel="stylesheet" href="{{ resource "css/chrome.css" }}">
+        {{#if print_enable}}
+        <link rel="stylesheet" href="{{ resource "css/print.css" }}" media="print">
+        {{/if}}
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="{{ resource "fonts/fonts.css" }}">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="{{ resource "highlight.css" }}">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="{{ resource "tomorrow-night.css" }}">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="{{ resource "ayu-highlight.css" }}">
+
+        <!-- Custom theme stylesheets -->
+        {{#each additional_css}}
+        <link rel="stylesheet" href="{{ resource this }}">
+        {{/each}}
+
+        {{#if mathjax_support}}
+        <!-- MathJax -->
+        <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        {{/if}}
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "{{ path_to_root }}";
+            const default_light_theme = "{{ default_theme }}";
+            const default_dark_theme = "{{ preferred_dark_theme }}";
+        {{#if search_js}}
+            window.path_to_searchindex_js = "{{ resource "searchindex.js" }}";
+        {{/if}}
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="{{ resource "toc.js" }}"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                {{#if search_enabled}}
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                {{/if}}
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+    {{!-- TINYBRAINS: the wordmark's network, drawn once and referenced twice -- the sidebar's
+          heading carries it, and the bar carries it while the sidebar is away.
+
+          IT IS MARKUP, NOT AN IMAGE, and that is the point: every stroke and node names a region
+          token, so the logo wears the palette and follows the theme switch. This is
+          web/src/components/Logo.tsx's geometry and web/src/components/Icon.tsx's sprite pattern;
+          theme/favicon.svg is the same drawing with the dark palette baked in. --}}
+    <svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+        <symbol id="tb-logo" viewBox="0 0 512 512">
+            <g fill="none" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="var(--frontal)" d="M222 94 154 102 100 134 66 184 54 236 78 274 126 282 174 248"/>
+                <path stroke="var(--parietal)" d="M222 94 292 90 358 110 410 150"/>
+                <path stroke="var(--occipital)" d="M410 150 444 200 450 250 422 286 366 278"/>
+                <path stroke="var(--temporal)" d="M174 248 150 298 188 332 244 336 298 312 366 278"/>
+                <path stroke="var(--frontal)" d="M100 134 154 190 174 248 M54 236 154 190"/>
+                <path stroke="var(--parietal)" d="M222 94 244 186 154 190 M244 186 358 110"/>
+                <path stroke="var(--occipital)" d="M244 186 350 204 444 200 M350 204 366 278"/>
+                <path stroke="var(--temporal)" d="M174 248 274 254 350 204 M274 254 244 336"/>
+                <path stroke="var(--cerebellum)" d="M366 278 406 310 398 346 360 364 320 344 322 310 366 278 M322 310 398 346"/>
+                <path stroke="var(--stem)" stroke-width="12" d="M298 312 288 364 316 410"/>
+                <path stroke="var(--stem)" stroke-width="12" d="M263 328 256 364 284 410 316 410"/>
+            </g>
+            <g fill="var(--frontal)">
+                <circle cx="154" cy="102" r="11"/><circle cx="100" cy="134" r="12"/><circle cx="66" cy="184" r="10"/>
+                <circle cx="54" cy="236" r="12"/><circle cx="78" cy="274" r="10"/><circle cx="126" cy="282" r="10"/>
+                <circle cx="154" cy="190" r="15"/>
+            </g>
+            <g fill="var(--parietal)">
+                <circle cx="222" cy="94" r="12"/><circle cx="292" cy="90" r="11"/><circle cx="358" cy="110" r="12"/>
+                <circle cx="244" cy="186" r="15"/>
+            </g>
+            <g fill="var(--occipital)">
+                <circle cx="410" cy="150" r="11"/><circle cx="444" cy="200" r="12"/><circle cx="450" cy="250" r="11"/>
+                <circle cx="422" cy="286" r="11"/><circle cx="350" cy="204" r="15"/><circle cx="366" cy="278" r="13"/>
+            </g>
+            <g fill="var(--temporal)">
+                <circle cx="174" cy="248" r="14"/><circle cx="150" cy="298" r="10"/><circle cx="188" cy="332" r="11"/>
+                <circle cx="244" cy="336" r="12"/><circle cx="298" cy="312" r="12"/><circle cx="274" cy="254" r="15"/>
+            </g>
+            <g fill="var(--cerebellum)">
+                <circle cx="406" cy="310" r="10"/><circle cx="398" cy="346" r="11"/><circle cx="360" cy="364" r="10"/>
+                <circle cx="320" cy="344" r="10"/><circle cx="322" cy="310" r="11"/>
+            </g>
+            <g fill="var(--stem)">
+                <circle cx="263" cy="328" r="11"/><circle cx="256" cy="364" r="11"/><circle cx="284" cy="410" r="11"/>
+                <circle cx="288" cy="364" r="11"/><circle cx="316" cy="410" r="11"/>
+            </g>
+        </symbol>
+    </svg>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('{{ default_theme }}')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            {{!-- TINYBRAINS: the brand's home. The band is the bar's own height and carries the
+                  bar's hairline, so the horizon runs unbroken across the window; tinybrains.css §5
+                  offsets the scrollbox below it. --}}
+            <div class="sidebar-head">
+                <a class="brand" href="{{ path_to_root }}index.html" aria-label="TinyBrains">
+                    <svg class="logo" aria-hidden="true" focusable="false"><use href="#tb-logo"/></svg>
+                    <span class="wordmark">tiny<span>brains</span></span>
+                </a>
+            </div>
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="{{ path_to_root }}toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                {{> header}}
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            {{fa "solid" "bars"}}
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            {{fa "solid" "paintbrush"}}
+                        </button>
+                        {{!-- TINYBRAINS: the site ships two palettes, so the book offers two. This list is
+                              what book.js reads to learn which themes exist -- `navy` is Cobalt dark and `light`
+                              is Cobalt light, and both names are load-bearing: book.js picks the dark syntax
+                              stylesheet for `coal` and `navy` by name, and theme/tb-replay.js reads the same
+                              class to dress the replay viewer. A stale `mdbook-theme` from the five-theme list
+                              is no longer in it, so book.js falls back to the default and the book heals itself.
+
+                              THE VISIBLE CONTROL IS THE SUN/MOON BUTTON AT THE RIGHT OF THE BAR, wired to
+                              these two by theme/tb-site.js. This popup and its toggle stay in the DOM because
+                              book.js holds references to both, and tinybrains.css §4 hides them. --}}
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Dark</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                        </ul>
+                        {{#if search_enabled}}
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            {{fa "solid" "magnifying-glass"}}
+                        </button>
+                        {{/if}}
+                    </div>
+
+                    {{!-- TINYBRAINS: which page you are on, and -- while the sidebar is away -- whose
+                          site it is. The brand lives in the sidebar's heading band; when that is gone
+                          it appears here in front of the page name, with the rule between them the
+                          application draws between two facts in a strip. tinybrains.css §4 is what
+                          swaps them, off the sidebar toggle's own checkbox, so it happens with no
+                          script and no flash.
+
+                          The wordmark is ONE ELEMENT: the bar is a flex row and two text nodes would
+                          take the row's gap between "tiny" and "brains". The colours separate them.
+
+                          THE PAGE'S HEADING IS HERE, AND ONLY HERE. The chapter's own <h1> is the
+                          same words a few lines below the bar, so tinybrains.css §6 takes it out of
+                          the content -- which leaves this as the page's one and only <h1>, and the
+                          reason it is a heading and its container is not. book.js finds the container
+                          by class, so the tags are free to be the right ones, and clicking either
+                          still scrolls to the top.
+
+                          The content heading comes back for print, where the bar does not exist. --}}
+                    <div class="menu-title">
+                        <a class="brand" href="{{ path_to_root }}index.html" aria-label="TinyBrains">
+                            <svg class="logo" aria-hidden="true" focusable="false"><use href="#tb-logo"/></svg>
+                            <span class="wordmark">tiny<span>brains</span></span>
+                        </a>
+                        <span class="menu-sep" aria-hidden="true"></span>
+                        <h1 class="page-name">{{ chapter_title }}</h1>
+                    </div>
+
+                    {{!-- TINYBRAINS: the theme switch and the source, and nothing else. The site
+                          navigation and the footer that used to sit here belong to the application
+                          at tinybrains.dev; the book is its own host now and links to its own pages.
+
+                          THE SWITCH IS ONE ICON BUTTON, not mdBook's paintbrush popup. That popup
+                          stays in the DOM because book.js holds references to it and does all the real
+                          work -- the html class, the syntax stylesheet, the storage -- and
+                          theme/tb-site.js clicks its buttons from here. tinybrains.css §4 hides it.
+
+                          Print and the edit pencil are gone from `book.toml` as well as from here,
+                          so nothing generates a page that nothing links to. --}}
+                    <div class="right-buttons">
+                        {{!-- TINYBRAINS: BOTH ICONS ARE ALWAYS HERE and CSS picks the one that shows
+                              (tinybrains.css §4), so the button is right on the first paint -- a script
+                              that swapped the glyph would draw the wrong one first. Each names the
+                              palette the click moves TO: a sun while the book is dark, a moon while it
+                              is light. theme/tb-site.js keeps the label saying the same thing. --}}
+                        <button id="tb-theme-switch" class="icon-button" type="button" title="Switch to the light theme" aria-label="Switch to the light theme">
+                            <svg class="ico i-sun" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                <circle cx="12" cy="12" r="4.2"/>
+                                <path d="M12 2.4v2.4M12 19.2v2.4M2.4 12h2.4M19.2 12h2.4M4.22 4.22l1.7 1.7M18.08 18.08l1.7 1.7M4.22 19.78l1.7-1.7M18.08 5.92l1.7-1.7"/>
+                            </svg>
+                            <svg class="ico i-moon" aria-hidden="true" focusable="false" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+                                <path d="M20.7 14.9A8.9 8.9 0 0 1 9.1 3.3 8.9 8.9 0 1 0 20.7 14.9Z"/>
+                            </svg>
+                        </button>
+                        {{#if git_repository_url}}
+                        <a href="{{git_repository_url}}" title="Git repository" aria-label="Git repository">
+                            {{fa git_repository_icon_class git_repository_icon}}
+                        </a>
+                        {{/if}}
+                    </div>
+                </div>
+
+                {{#if search_enabled}}
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                {{fa "solid" "spinner" "fa-spin"}}
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+                {{/if}}
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        {{{ content }}}
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        {{#if previous}}
+                            <a rel="prev" href="{{ path_to_root }}{{previous.link}}" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                {{#if (eq ../text_direction "rtl")}}
+                                {{fa "solid" "angle-right"}}
+                                {{else}}
+                                {{fa "solid" "angle-left"}}
+                                {{/if}}
+                            </a>
+                        {{/if}}
+
+                        {{#if next}}
+                            <a rel="next prefetch" href="{{ path_to_root }}{{next.link}}" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                {{#if (eq ../text_direction "rtl")}}
+                                {{fa "solid" "angle-left"}}
+                                {{else}}
+                                {{fa "solid" "angle-right"}}
+                                {{/if}}
+                            </a>
+                        {{/if}}
+
+                        <div style="clear: both"></div>
+                    </nav>
+
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                {{#if previous}}
+                    <a rel="prev" href="{{ path_to_root }}{{previous.link}}" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        {{#if (eq ../text_direction "rtl")}}
+                        {{fa "solid" "angle-right"}}
+                        {{else}}
+                        {{fa "solid" "angle-left"}}
+                        {{/if}}
+                    </a>
+                {{/if}}
+
+                {{#if next}}
+                    <a rel="next prefetch" href="{{ path_to_root }}{{next.link}}" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        {{#if (eq text_direction "rtl")}}
+                        {{fa "solid" "angle-left"}}
+                        {{else}}
+                        {{fa "solid" "angle-right"}}
+                        {{/if}}
+                    </a>
+                {{/if}}
+            </nav>
+
+        </div>
+
+        <template id=fa-eye>{{fa "solid" "eye"}}</template>
+        <template id=fa-eye-slash>{{fa "solid" "eye-slash"}}</template>
+        <template id=fa-copy>{{fa "regular" "copy"}}</template>
+        <template id=fa-play>{{fa "solid" "play"}}</template>
+        <template id=fa-clock-rotate-left>{{fa "solid" "clock-rotate-left"}}</template>
+
+        {{#if live_reload_endpoint}}
+        <!-- Livereload script (if served using the cli tool) -->
+        <script>
+            const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsAddress = wsProtocol + "//" + location.host + "/" + "{{{live_reload_endpoint}}}";
+            const socket = new WebSocket(wsAddress);
+            socket.onmessage = function (event) {
+                if (event.data === "reload") {
+                    socket.close();
+                    location.reload();
+                }
+            };
+
+            window.onbeforeunload = function() {
+                socket.close();
+            }
+        </script>
+        {{/if}}
+
+        {{#if playground_line_numbers}}
+        <script>
+            window.playground_line_numbers = true;
+        </script>
+        {{/if}}
+
+        {{#if playground_copyable}}
+        <script>
+            window.playground_copyable = true;
+        </script>
+        {{/if}}
+
+        {{#if playground_js}}
+        <script src="{{ resource "ace.js" }}"></script>
+        <script src="{{ resource "mode-rust.js" }}"></script>
+        <script src="{{ resource "editor.js" }}"></script>
+        <script src="{{ resource "theme-dawn.js" }}"></script>
+        <script src="{{ resource "theme-tomorrow_night.js" }}"></script>
+        {{/if}}
+
+        {{#if search_js}}
+        <script src="{{ resource "elasticlunr.min.js" }}"></script>
+        <script src="{{ resource "mark.min.js" }}"></script>
+        <script src="{{ resource "searcher.js" }}"></script>
+        {{/if}}
+
+        <script src="{{ resource "clipboard.min.js" }}"></script>
+        <script src="{{ resource "highlight.js" }}"></script>
+        <script src="{{ resource "book.js" }}"></script>
+
+        <!-- Custom JS scripts -->
+        {{#each additional_js}}
+        <script src="{{ resource this}}"></script>
+        {{/each}}
+
+        {{#if is_print}}
+        {{#if mathjax_support}}
+        <script>
+        window.addEventListener('load', function() {
+            MathJax.Hub.Register.StartupHook('End', function() {
+                window.setTimeout(window.print, 100);
+            });
+        });
+        </script>
+        {{else}}
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+        {{/if}}
+        {{/if}}
+
+        {{#if fragment_map}}
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const fragmentMap =
+                    {{{fragment_map}}}
+                ;
+                const target = fragmentMap[window.location.hash];
+                if (target) {
+                    let url = new URL(target, window.location.href);
+                    window.location.replace(url.href);
+                }
+            });
+        </script>
+        {{/if}}
+
+    </div>
+    </body>
+</html>

@@ -17,6 +17,16 @@
     return typeof path_to_root === "string" ? path_to_root : "";
   }
 
+  // AGAINST THE PAGE, NOT AGAINST THIS FILE. `path_to_root` is relative to the page, and a bare
+  // relative specifier in the dynamic import below is not: a classic script loaded from a URL
+  // resolves its imports against ITS OWN url, which is theme/tb-replay-<hash>.js. On a chapter two
+  // levels deep that turned "../../viz/viz.js" into /viz/viz.js -- off the book entirely, where the
+  // site's SPA fallback answered with HTML and every replay on the page fell back to its sentence.
+  // Resolving explicitly against document.baseURI is what makes path_to_root mean what it says.
+  function fromPage(relative) {
+    return new URL(root() + relative, document.baseURI).href;
+  }
+
   // mdBook's five themes, sorted into the two the viewer knows. The viewer's chrome otherwise
   // answers `prefers-color-scheme`, which is the operating system's opinion and not the reader's:
   // a book left on `coal` while the machine is in light mode would carry a white player.
@@ -48,7 +58,7 @@
     var slots = Array.prototype.slice.call(document.querySelectorAll(".tb-replay"));
     if (!slots.length) return;
 
-    import(root() + "viz/viz.js")
+    import(fromPage("viz/viz.js"))
       .then(function (viz) {
         slots.forEach(function (el) {
           var src = el.dataset.src;
@@ -62,7 +72,7 @@
           if (el.dataset.height) el.style.height = el.dataset.height + "px";
           else el.style.height = "360px";
 
-          viz.mount(el, root() + src, opts).catch(function (e) {
+          viz.mount(el, fromPage(src), opts).catch(function (e) {
             fallback(el, "This replay could not be loaded: " + e.message);
           });
         });

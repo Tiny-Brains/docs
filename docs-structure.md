@@ -173,3 +173,56 @@ where a game animation contributes no useful explanation.
 | `observation-payload` | [observation](src/models/observation.md) |
 | `testing-behaviour` | [testing](src/models/testing.md) |
 | `quickstart-first-trial` | [quickstart](src/quickstart.md) |
+
+## The theme
+
+The book wears the application's design system — the same palette, the same type, the same brand —
+so a reader crossing from tinybrains.dev to docs.tinybrains.dev does not cross a visual seam.
+Nothing about that lives in a page; it is all in `theme/`, and `book.toml` is what wires it up.
+
+The book is its own host, so it carries no site navigation and no footer. The bar holds the search,
+**the page's title**, the theme button and the way to the source. The title is centred on the bar
+and it is the page's `<h1>`: the chapter's own heading is taken out of the content, because the two
+said the same words a few lines apart. The bar is sticky, so a page keeps its title on screen the
+whole way down. The brand belongs to the sidebar's heading band and moves into the bar, in front of
+the title, when the sidebar is away — and then the title follows it rather than centring.
+
+| File | What it is |
+|---|---|
+| `theme/tokens.css` | **A copy of `web/public/design-system/tokens.css`, and it must stay one.** Same values, keyed to mdBook's theme classes instead of the application's `data-theme` attribute. `diff` the declarations when the application's palette moves |
+| `theme/tinybrains.css` | mdBook's own variables answered in Cobalt roles, then the site's components — the bar, the brand, the sidebar, notes, tables, code — restated for the elements mdBook emits. It names no colour, only tokens |
+| `theme/index.hbs` | mdBook 0.5.4's template, vendored. Every change carries a `TINYBRAINS` comment: the logo sprite, the brand in the sidebar band and in the bar, `{{ chapter_title }}` as the page's `<h1>` in the bar, the sun/moon theme button beside the source link, and two themes instead of five |
+| `theme/tb-site.js` | The bar's theme button. It sets no theme and it does not choose the glyph — it clicks mdBook's own hidden theme buttons, which is where all the work already lives, and keeps the label saying what the click does |
+| `theme/tb-replay.js`, `theme/tb-replay.css` | The embedded replay viewer, and the frame around it |
+| `theme/fonts/fonts.css` | Empty on purpose. The design system is set in the reader's own interface font, so the book ships no webfont |
+| `theme/favicon.svg` | The application's `logo-network.svg` |
+
+**What must stay true**
+
+- **The palette is the application's, to the digit.** `theme/tokens.css` is a copy; a colour invented
+  here is a colour the site does not have.
+- **The logo is markup, not an image.** Every stroke names a region token, so it wears the palette
+  and follows the theme switch. It is defined once as a `<symbol>` and referenced twice, because it
+  appears in two places and only one of them shows at a time.
+- **`theme/index.hbs` is pinned to mdBook 0.5.4.** book.js reaches for `.menu-title`,
+  `#mdbook-theme-toggle` and `#mdbook-theme-list` by name and throws without them, and the two theme
+  names — `navy` and `light` — are read by book.js (which syntax stylesheet) and by `tb-replay.js`
+  (which palette the viewer wears). On an mdBook upgrade, re-diff the template and re-apply the
+  marked blocks; nothing at build time notices one that has fallen behind.
+- **Which brand shows is CSS, not script.** The swap runs off the sidebar toggle's own checkbox, so
+  it is right on the first paint and right with JavaScript off. The theme button works the same way:
+  both the sun and the moon are in the markup and the theme class picks one, so it never draws the
+  wrong glyph first. The icon names where the click goes, not where the reader is.
+- **There is one `<h1>` per page and it lives in the bar.** `.page-name` is the heading; its
+  container is a `div`, because upstream's `<h1>` wrapper would make two. book.js finds the container
+  by class, so the tags are free to be the right ones.
+- **The chapter's own heading is hidden, not deleted.** `.content main > h1:first-child` — first
+  child only, so a page that opens some other way is untouched, and so is every chapter but the
+  first when `print.html` strings them together. It comes back under `@media print`: there is no bar
+  on paper, and a printed chapter with no title is worse than one that says its name twice. Every
+  page in `src/` opens with exactly one `#` heading today, which is what makes the rule safe; a page
+  that stops doing so keeps its heading and shows the title twice.
+- **`site-url` is where the book is served**, and it is `/` because the book has its own host.
+  mdBook writes `<base href>` into `404.html` alone, so that page finds its stylesheets only if this
+  is right. A local stack that mounts the book under `/docs/` is the one case it is wrong for — and
+  `mdbook serve` overrides it with `/` for its own preview, so finish with `mdbook build`.
