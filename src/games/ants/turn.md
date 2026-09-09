@@ -29,7 +29,13 @@ stays is a collision. Swapping two adjacent ants does not itself collide because
 their destinations differ; combat still follows at their new positions.
 
 
-> **Replay visualiser — planned:** Compare recorded moves into one destination with a safe swap. Show submitted arrows and surviving ants after the complete turn; distinguish any combat deaths.
+An ant walking east meets water on turns 3 and 4 and simply stays; it then leaves the top edge and
+arrives at the bottom, because the board wraps.
+
+<div class="tb-replay" data-src="tutorials/1-movement.json" data-turn="6" data-zoom="6"></div>
+
+<p class="tb-replay-caption">Movement, blocking and wrapping on an eight-by-twelve board. The
+opposing ant holds still throughout, so nothing here is combat.</p>
 
 <!-- replay-visualiser: turn-collision
 Use a recorded replay and its matching engine digest; select the relevant turns.
@@ -61,7 +67,14 @@ The last two cases have the same number of ants but different outcomes. Model
 position and support, not only the size of each army.
 
 
-> **Replay visualiser — planned:** Use recorded one-against-one and supported-combat examples. Overlay each ant’s focus before the turn resolves, then explain the casualties from those values.
+Two ants that close to within attack range with nothing supporting either one have equal focus,
+and both die. Step through it: the ants meet on turn 3, and turn 4 has neither of them.
+
+<div class="tb-replay" data-src="tutorials/2-fight.json" data-turn="3" data-zoom="6"></div>
+
+<p class="tb-replay-caption">A one-against-one exchange on an eight-by-twelve board, played by the
+engine from a written script. Use the arrow keys to step a turn at a time; click a cell to see what
+is on it.</p>
 
 <!-- replay-visualiser: turn-focus-combat
 Use a recorded replay and its matching engine digest; select the relevant turns.
@@ -74,6 +87,11 @@ Replay asset and turn range: to be selected. No synthetic match result is implie
 A surviving enemy on a standing hill destroys it, earning +2 and costing its
 owner 1 point. An attacker killed during collisions or battle razes nothing.
 Your own ant cannot raze your hill.
+
+<div class="tb-replay" data-src="tutorials/3-raze.json" data-turn="7" data-zoom="5"></div>
+
+<p class="tb-replay-caption">The attacker reaches the hill on the last turn: +2 to it, −1 to the
+owner, and the match ends with one colony still able to spawn.</p>
 
 ## Food and new ants
 

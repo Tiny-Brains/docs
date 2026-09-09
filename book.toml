@@ -10,6 +10,11 @@ build-dir = "book"
 create-missing = false          # a SUMMARY entry with no file is an error, not a new stub
 
 [output.html]
+# The replay viewer, on any page that has a `.tb-replay` slot. The script pulls the viewer module
+# in only when a page actually uses one -- the cartridge is a quarter of a megabyte and most pages
+# do not want it.
+additional-js = ["theme/tb-replay.js"]
+additional-css = ["theme/tb-replay.css"]
 default-theme = "navy"
 preferred-dark-theme = "navy"
 git-repository-url = "https://github.com/Tiny-Brains/docs"
