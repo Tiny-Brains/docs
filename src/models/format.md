@@ -31,6 +31,23 @@ combination will execute. In particular, do not infer that an unlisted variant
 such as `GatherND` is allowed because a related operator is listed. Admission
 checks the exported graph, so inspect what your exporter actually emitted.
 
+### Attributes are not operators
+
+The allowlist names operators, not the attributes they carry. `Conv` is listed, so a **dilated**
+convolution is allowed: dilation is an attribute of `Conv` in ONNX rather than an operator of its
+own, and a dilated graph inspects as `Conv` like any other. The same reasoning covers strides,
+groups and asymmetric kernels.
+
+This is worth knowing because the observation is a board and your graph's **receptive field** — how
+far from a cell its output can be influenced by — bounds what a unit standing there can respond to.
+A stack of ordinary 3x3 convolutions grows that by two cells a layer. Doubling the dilation grows it
+exponentially, so four layers reach fifteen cells each way for the same parameters that three
+undilated layers spend reaching three.
+
+The platform has no opinion about your architecture. It is mentioned only because "which operators
+may I use" is a question the allowlist answers and "may I dilate one of them" is a question it looks
+like it does not.
+
 ## Inputs and outputs
 
 Every `in` result field names a graph input and must hold a tensor of its expected
