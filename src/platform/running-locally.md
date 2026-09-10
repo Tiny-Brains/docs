@@ -48,7 +48,7 @@ HTTPS deployments require their corresponding cookie policy.
 
 ```sh
 docker compose up --build -d
-./scripts/check-configs.sh
+./scripts/check/configs.sh
 docker compose ps -a
 docker compose logs loader
 ```
@@ -79,7 +79,7 @@ opponent for the trial and regular matches.
 The development fixture script can populate baseline assets:
 
 ```sh
-./scripts/seed-baselines.sh
+./scripts/dev/seed-baselines.sh
 ```
 
 Seed rows containing hashes alone are not runnable models. The model bytes must

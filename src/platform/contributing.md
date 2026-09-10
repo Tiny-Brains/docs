@@ -41,7 +41,7 @@ Run checks appropriate to the repository and changed boundary:
 | Jodi plugins | `cargo test --manifest-path plugins/tb-rating/Cargo.toml` and the corresponding pairing manifest |
 | Soma, Jodi, Kalam definitions | `orion-server lint . --deny-warnings` and `./scripts/check-sql.sh` |
 | Web | `npm run lint` and `npm run build` |
-| DevOps | `./scripts/check-configs.sh`, loader output, and a representative end-to-end flow |
+| DevOps | `./scripts/check/configs.sh`, loader output, and a representative end-to-end flow |
 
 SQL checks create disposable scratch databases and verify shipped statements;
 they do not prove live scheduling or concurrency. Axon's live S3 tests require
