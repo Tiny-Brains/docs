@@ -208,6 +208,11 @@ site's components without an `!important` in sight.
 
 ## Status
 
+**Decision 46, 10 September 2026 — no compute cap.** Nine pages changed. The weight-class table lost
+its FLOP column and says plainly that size is the only thing a class limits, with the turn deadline —
+divided among the seats in a call — named as the compute bound. `FLOPS_OVER_CAP` is gone from the
+rejection reasons: one fewer way to be refused for something a competitor could not predict locally.
+
 **10 September 2026.** Thirty-three pages across five sections build clean under mdBook 0.5.4 with
 `create-missing = false`. The competitor path — rules, model format, weight classes, the adapter
 dialect and its budget, testing, submitting, admission, the trial, ranking and seasons — is written

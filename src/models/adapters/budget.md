@@ -2,7 +2,7 @@
 
 Ants currently allows **1,000,000 adapter operations per direction per call**.
 The `in` program and the `out` program each receive that budget independently.
-Inference has its own FLOP cap, and the whole call must also meet the turn deadline.
+Inference has no separate cap of its own; the whole call must meet the turn deadline.
 
 ## What counts as an operation
 

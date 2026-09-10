@@ -52,7 +52,7 @@ by the Ants reference implementation.
 The **plugin manifest** describes the Orion ABI, component path, namespaced
 functions, and input fields. Ants authors `plugin.toml` and generates `plugin.json`.
 The **cartridge registration manifest** describes game/version/ABI, presets with
-seat counts, turn limits, adapter operation budget, and per-class FLOP caps.
+seat counts, turn limits, and the adapter operation budget.
 Ants generates `cartridge.json` from its preset implementation.
 
 Generate registration facts from the same definitions the engine uses so map

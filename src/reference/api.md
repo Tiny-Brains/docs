@@ -64,7 +64,7 @@ A season entry includes `number`, `state`, `submissions_open_at`,
 | GET | `/v1/matches/{id}` | Public | Match UUID |
 
 A version detail reports its owner, game, version, release metadata, class, size,
-parameter count, estimated FLOPs, hashes, evaluator identity, season, status,
+parameter count, measured inference time, hashes, evaluator identity, season, status,
 phase, admission attempt, successor, rejection reason, latest trial, and ratings.
 Many fields are null before admission produces them. `ratings` is keyed by ladder.
 

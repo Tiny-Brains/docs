@@ -65,8 +65,9 @@ curl --fail-with-body -sS http://127.0.0.1:9091/validate   -H 'Content-Type: app
 
 Inspect the JSON body's `ok` field, not only the HTTP status. On failure, read
 `reason`, `detail`, `failing_case`, and `over_budget`. On success, compare the
-reported `inputs`, per-direction counts, and `flops_max` to your expected shapes
-and limits. Admission currently allows 5,000 ms per validation observation;
+reported `inputs`, per-direction counts, and `infer_us_max` to your expected shapes
+and limits. `infer_us_max` is the slowest reference case's inference in microseconds;
+compare it against the turn deadline, divided by the seats a wave plays at once. Admission currently allows 5,000 ms per validation observation;
 using the actual 1,000 ms turn deadline locally is an additional check, not an
 exact reproduction of that admission timeout.
 

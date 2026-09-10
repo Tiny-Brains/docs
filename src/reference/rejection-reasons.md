@@ -31,7 +31,6 @@ mapping; do not depend on an invented `duplicate_release` error code.
 | `GRAPH_INVALID` | ONNX cannot build a runnable session | Re-export and test the exact file in Axon |
 | `OPSET_UNSUPPORTED` | Opset outside deployed policy | Export within the supported range |
 | `OP_NOT_ALLOWED` | Graph uses an unlisted operator | Inspect the exported nodes and use supported operations |
-| `FLOPS_OVER_CAP` | Estimated inference cost exceeds the assigned class cap | Reduce compute at the actual reference shapes |
 
 A compute-cap failure does not automatically move the entry to a larger class.
 See [model format](../models/format.md) and [weight classes](../models/weight-classes.md).

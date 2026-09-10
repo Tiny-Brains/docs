@@ -13,9 +13,12 @@ The platform processes these stages in order:
    the pair. The admission loader mirrors verified bytes into the model store.
 3. Inspect compressed size, parameter count, opset, and graph operators.
 4. Assign a size class and apply the configured opset and operator policy.
-5. Run the adapter and graph on reference observations under the operation budget.
-6. Check estimated FLOPs at the actual input shapes against the assigned class cap.
-7. Record either `verified` or `rejected`, releasing the loader's temporary hold.
+5. Run the adapter and graph on reference observations under the operation budget,
+   recording the measured inference time at the actual input shapes.
+6. Record either `verified` or `rejected`, releasing the loader's temporary hold.
+
+Nothing in that walk rejects a graph for being expensive. The turn deadline does
+that, at play, as a strike against the seat that missed it.
 
 The adapter must produce named tensors acceptable to the graph, and output
 adaptation must yield JSON. This does not replace your own Ants action-length and

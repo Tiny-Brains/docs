@@ -20,8 +20,9 @@ when its configuration differs. Byte units are binary: 1 KiB = 1,024 bytes and
 
 The compressed metric includes initializer data and exact adapter bytes. Raw file
 limits are separate backstops. The [class table](../models/weight-classes.md)
-contains all five size boundaries and per-class FLOP caps; the
-[format page](../models/format.md) lists configured ONNX operators.
+contains all five size boundaries; the
+[format page](../models/format.md) lists configured ONNX operators. There is no
+per-class compute cap.
 
 ## Ants matches
 
@@ -77,7 +78,7 @@ These are policy settings, not per-competitor match-rate guarantees. Read
 
 ## Where values come from
 
-Ants' `cartridge.json` declares presets, turn limits, adapter budget, and FLOP caps.
+Ants' `cartridge.json` declares presets, turn limits, and the adapter budget.
 The engine source implements geometry and game-ending rules. Jodi's admission
 judging fixes size boundaries, while the DevOps Orion templates configure opsets,
 trials, ratings, and scheduling. Axon's configuration sets raw asset ceilings.

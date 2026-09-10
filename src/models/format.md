@@ -67,8 +67,9 @@ files, so even a formatting-only adapter edit requires a new hash.
 
 Admission verifies asset hashes, loads the model and adapter, reads graph facts,
 checks class and operator policy, and evaluates reference observations. Validation
-reports the input shapes actually used, adapter counts, and estimated FLOPs at
-those shapes. Exceeding the class compute cap can reject a small graph.
+reports the input shapes actually used, adapter counts, and the measured inference
+time at those shapes. That time is reported, never a threshold: no class caps your
+compute, and the bound that matters is the turn deadline at play.
 
 Use [Testing before you submit](testing.md) to exercise the same loader locally.
 Passing admission establishes compatibility on the reference cases; it does not
