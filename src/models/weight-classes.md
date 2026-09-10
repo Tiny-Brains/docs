@@ -40,6 +40,42 @@ its season and not necessarily across seasons.** Two seasons that ran different 
 limits produced two different competitions, and the standings say which limits they
 were played under.
 
+## How many parameters that actually is
+
+The metric compresses **initializer data**, so what fits depends on the dtype you export
+in. Measured with zstd level 19 over trained-shaped weights:
+
+| Initializer dtype | Bytes per parameter | Relative capacity |
+|---|---:|---:|
+| `float32` | 3.69 | 1.00x |
+| `float16` | 1.82 | **2.03x** |
+| `int8` | 0.76 | 4.86x |
+
+**Exporting float16 weights roughly doubles the model your class holds**, and costs
+nothing you would notice: keep the graph's compute in float32 by casting each
+initializer back at its use, and the runtime folds that cast away at load. The
+operator set does not change — `Cast` is configured — and in a measured comparison the
+float16 graph chose the same move as the float32 one on every ant of three matches.
+
+Subtract your adapter first. A plain seven-plane Ants adapter compresses to about 400
+bytes, which is 5% of a Nano budget and nothing at all above that.
+
+## The deadline, not the class, is what limits a big model
+
+The table above is generous at the top and the turn is not. Your seat owns
+`turn_deadline / rows in the play call` — with sixteen matches of two seats in a wave,
+about 31 ms — unless several rows in that call share your exact model file, which is a
+thing baselines get and a single entry does not.
+
+That has a consequence worth knowing before you design a large network: **a fully
+convolutional network over the largest Ants board runs out of turn at roughly 170,000
+parameters**, which is inside Mini. Filling Small or Large means spending parameters
+where they cost less per turn — at a reduced resolution, or in a lookup that is read
+rather than multiplied — not simply making the same network wider.
+
+Admission reports your measured inference time and never rejects you for it. The
+rejection, if it comes, comes later and looks like a [strike](../competing/matches.md).
+
 ## How your class is decided
 
 The [size metric](format.md#how-size-is-measured) counts compressed initializer
