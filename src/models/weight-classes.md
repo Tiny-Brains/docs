@@ -68,10 +68,17 @@ about 31 ms — unless several rows in that call share your exact model file, wh
 thing baselines get and a single entry does not.
 
 That has a consequence worth knowing before you design a large network: **a fully
-convolutional network over the largest Ants board runs out of turn at roughly 170,000
-parameters**, which is inside Mini. Filling Small or Large means spending parameters
+convolutional network over the largest Ants board runs out of turn at roughly 65,000
+parameters**, which is inside Micro. Filling Mini and above means spending parameters
 where they cost less per turn — at a reduced resolution, or in a lookup that is read
 rather than multiplied — not simply making the same network wider.
+
+The reason is worth stating plainly, because it is structural rather than a tuning
+problem. In a convolution every parameter is applied at every cell, so bytes and
+arithmetic are locked together: one parameter costs `2 × cells` multiply-accumulates,
+and nothing about the kernel size, the grouping or the dtype changes that ratio. A
+class cap is a budget in bytes; the turn is a budget in arithmetic; and above Micro the
+second runs out first.
 
 Admission reports your measured inference time and never rejects you for it. The
 rejection, if it comes, comes later and looks like a [strike](../competing/matches.md).
