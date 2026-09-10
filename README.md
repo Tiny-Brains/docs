@@ -39,8 +39,8 @@ source and is not going to.
 
 | Direction | Party | Over | What moves |
 |---|---|---|---|
-| reads | Ants | `../ants/viz/dist` | The viewer bundle, vendored into `src/viz/` so the book builds offline |
-| calls | DevOps CLI | `tinybrains <spec>` | Scripted lessons played through the real cartridge into replay envelopes |
+| reads | Ants | its artifact image, `/artifacts/viz` | The viewer bundle, copied into `src/viz/` so the book builds offline |
+| calls | DevOps CLI | `tinybrains <spec>`, from its artifact image | Scripted lessons played through the real cartridge into replay envelopes |
 | copies | Web | `web/public/design-system/tokens.css` | The palette, to the digit |
 | restates | Ants, Jodi, DevOps, Axon | Their configuration | Every number on the limits, weight-class and format pages |
 | read by | Web's nginx, or the book's own host | Static HTTP | The rendered `book/` |
@@ -84,8 +84,9 @@ All commands run from this repository's root.
 - **mdBook 0.5.4.** `theme/index.hbs` is that version's template, vendored; another version's
   `book.js` may look for elements it does not find.
 - Python 3, for `tutorials/make-map.py` and the build's digest check.
-- The `tinybrains` CLI and a built viewer at `../ants/viz/dist`, to regenerate the lessons —
-  `cargo install --path ../devops/cli` and `ants/viz/build.sh`. Neither is needed to build the book.
+- The `tinybrains` CLI and a viewer at `$ANTS_DIR/viz/dist`, to regenerate the lessons. `Dockerfile`
+  takes both from artifact images and needs neither on the host; by hand, `docker cp` them out of
+  `tinybrains/cli:dev` and `tinybrains/ants:dev`, or use a built checkout of each.
 
 ```sh
 mdbook build                # the whole check: no test suite, no linter
@@ -125,8 +126,8 @@ deployment.
 ```text
 src/                 the pages -- five sections, thirty-three chapters
 src/SUMMARY.md       the published chapter order; create-missing = false
-src/tutorials/       generated: the lesson replays, committed
-src/viz/             vendored: the cartridge's viewer bundle and engine.json, committed
+src/tutorials/       generated: the lesson replays (gitignored)
+src/viz/             the cartridge's viewer bundle, from its artifact image (gitignored)
 tutorials/           the lessons' sources -- boards/*.txt, seat scripts, build.sh, make-map.py
 tutorials/README.md  how to write a lesson, and what the viewer cannot show
 theme/               the book wearing the application's design system
@@ -202,11 +203,31 @@ site's components without an `!important` in sight.
   on paper, and a printed chapter with no title is worse than one that says its name twice. Every
   page in `src/` opens with exactly one `#` heading today, which is what makes the rule safe; a page
   that stops doing so keeps its heading and shows the title twice.
-- **Generated and vendored files are committed.** `src/tutorials/` and `src/viz/` are build output
-  that ships; a source change without its regenerated output publishes a stale lesson and nothing
-  at build time notices.
+- **Nothing generated is committed, and `real-match.json` is the exception that proves it.**
+  `src/tutorials/`, `src/viz/`, `tutorials/boards/*.json` and the scenario replays are rebuilt by
+  `Dockerfile` from artifact images. `tutorials/replays/real-match.json` is committed because it is
+  *input*: a real match captured from a running stack, which nothing here can reproduce. It is also
+  the file that goes stale without anyone noticing, which is why `build.sh` refuses to finish when
+  its `engine_digest` disagrees with the viewer's.
 
 ## Status
+
+**10 September 2026 — the book builds from artifact images, and the build is RED.** Nothing
+generated is committed: `src/viz/`, `src/tutorials/`, `tutorials/boards/*.json` and the scenario
+replays are gitignored, and `Dockerfile` rebuilds them — the viewer from the cartridge's artifact
+image, the `tinybrains` binary that plays the lessons from devops'. Building the book no longer
+needs the platform checked out around it, nor a Rust toolchain.
+
+**It does not currently finish.** The seven scripted lesson replays regenerate cleanly on the
+current engine, but `tutorials/replays/real-match.json` was captured on `sha256:d41f863f…` and the
+cartridge now ships `sha256:0807b641…`, so `build.sh`'s digest check refuses it. That file is
+**source, not build output** — a real match captured from a running stack, which nothing here can
+reproduce — and it is embedded on four pages, including the introduction.
+
+The fix is a re-captured match, not a looser check: a viewer re-simulating with a different engine
+does not fail, it draws a plausible match that never happened. When you replace it, check that the
+`data-turn` on each of those four pages still falls inside the new match — `src/competing/matches.md`
+asks for turn 161.
 
 **Decision 46, 10 September 2026 — no compute cap.** Nine pages changed. The weight-class table lost
 its FLOP column and says plainly that size is the only thing a class limits, with the turn deadline —

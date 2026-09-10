@@ -24,11 +24,21 @@ mdbook serve                  # preview; it overrides site-url with "/", so fini
 tutorials/build.sh            # regenerate the teaching replays and re-vendor the viewer
 ```
 
-There is no test suite and no linter. `book/` is build output and gitignored; **everything under
-`src/tutorials/` and `src/viz/` is build output that is committed.**
+There is no test suite and no linter. **Nothing generated is committed**: `book/`, `src/viz/`,
+`src/tutorials/`, `tutorials/boards/*.json` and the scenario replays under `tutorials/replays/` are
+all gitignored. `Dockerfile` rebuilds them, taking the viewer from the cartridge's artifact image
+and the `tinybrains` binary from devops', so building the book needs neither a sibling checkout nor
+a Rust toolchain.
 
-`tutorials/build.sh` needs `tinybrains` on PATH (`cargo install --path ../devops/cli`) and a built
-viewer at `../ants/viz/dist` (`ants/viz/build.sh`); `ANTS_DIR` overrides the location.
+The one exception is `tutorials/replays/real-match.json`, which is **source**: a real match captured
+from a running stack, which nothing here can reproduce.
+
+`tutorials/build.sh` still runs by hand — it needs `tinybrains` on PATH and a viewer at
+`$ANTS_DIR/viz/dist`; both can come out of the images with `docker cp`.
+
+> **The image build is currently RED, on purpose.** `real-match.json` was captured on engine
+> `d41f863f…` and the cartridge now ships `0807b641…`, so the digest check refuses it. That check is
+> the whole guarantee — see below — and the fix is a re-captured match, not a looser check.
 
 ## How a page shows a rule
 
@@ -39,7 +49,7 @@ the real cartridge, so the page cannot be wrong about the rule in a way the engi
 tutorials/boards/*.txt  --make-map.py-->  boards/*.json  ─┐
 tutorials/<lesson>.json (seat scripts, vars) ─────────────┴-- tinybrains --> replays/*.json
                                                                                   │  cp
-../ants/viz/dist ──────────────────── cp ──────────────> src/viz/ <── digest check ┴─> src/tutorials/
+ants artifact image ─────────────── COPY ──────────────> src/viz/ <── digest check ┴─> src/tutorials/
 ```
 
 - Half a board is drawn (`.` land, `#` water, `H` hill, `*` food); `make-map.py` translates it into
@@ -47,7 +57,9 @@ tutorials/<lesson>.json (seat scripts, vars) ───────────�
 - Seats are **scripted**, not modelled — a scripted seat never reaches the loader, so a lesson needs
   no ONNX, no model store and no inference, and still goes through the engine's `step`.
 - `tutorials/replays/real-match.json` is **captured from a running stack, not generated**;
-  `build.sh` copies it and never rebuilds it.
+  `build.sh` copies it and never rebuilds it. It is the one file under `tutorials/replays/` that is
+  committed, because it is the only one that is an input rather than an output — and it is exactly
+  the file that goes stale without anyone noticing, which is what the check below is for.
 - `build.sh` fails if any replay's `engine_digest` differs from `src/viz/engine.json`. That check is
   load-bearing: a viewer re-simulating with the wrong engine does not error, it draws a plausible
   match that never happened.

@@ -6,13 +6,20 @@
 # rather than a drawing of what someone believed they do. That also means it goes stale when the
 # engine changes, which is why this is a script and not a one-off.
 #
-#     tutorials/build.sh              # needs `tinybrains` on PATH and ../ants beside this repo
+#     tutorials/build.sh              # needs `tinybrains` on PATH and a viewer at $ANTS_DIR/viz/dist
+#
+# ../Dockerfile runs this with both taken from artifact images -- the viewer from the cartridge's,
+# the binary from devops' -- so neither needs a sibling checkout. Run it by hand the same way, or
+# with ANTS_DIR pointing at an ants checkout that has been built.
 set -eu
 here=$(cd "$(dirname "$0")" && pwd)
 cd "$here"
 
 command -v tinybrains > /dev/null 2>&1 || {
-  echo "tinybrains is not on PATH -- cargo install --path ../../devops/cli" >&2; exit 1; }
+  echo "tinybrains is not on PATH." >&2
+  echo "  from the CLI's artifact image:  docker create tinybrains/cli:dev, then docker cp its /artifacts/bin/tinybrains" >&2
+  echo "  or from a checkout:             cargo install --path ../../devops/cli" >&2
+  exit 1; }
 
 echo "==> boards"
 for txt in boards/*.txt; do
@@ -56,7 +63,24 @@ if bad:
     print("    MISMATCH -- the viewer was built against", built, file=sys.stderr)
     for f, played in bad:
         print(f"      {f} was played on {played}", file=sys.stderr)
-    print("    regenerate the scenarios, or re-capture the match, against the current engine",
+    print(file=sys.stderr)
+    # Which file it is decides what the fix is, and only one of the two is this build's to make.
+    if any("real-match" in f for f, _ in bad):
+        print("    replays/real-match.json is a real match CAPTURED FROM A RUNNING STACK. Nothing",
+              file=sys.stderr)
+        print("    here can reproduce it: it is source, not build output, and it is referenced from",
+              file=sys.stderr)
+        print("    four pages. Re-capture a match played on the current engine and replace it --",
+              file=sys.stderr)
+        print("    and check the `data-turn` on each of those pages still falls inside the new match.",
+              file=sys.stderr)
+    if any("real-match" not in f for f, _ in bad):
+        print("    The scenario replays are generated here; re-run this script to bring them forward.",
+              file=sys.stderr)
+    print(file=sys.stderr)
+    print("    A viewer re-simulating with a different engine does not fail. It draws a plausible",
+          file=sys.stderr)
+    print("    match that never happened, which is why this is an error and not a warning.",
           file=sys.stderr)
     sys.exit(1)
 print(f"    {len(glob.glob('replays/*.json'))} replays agree with the viewer on {built[:14]}...")
