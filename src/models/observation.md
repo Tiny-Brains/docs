@@ -19,18 +19,23 @@ Coordinates are zero-based and wrap as described in [The world](../games/ants/wo
 Empty lists are valid. Do not treat a list index as a permanent ant identity:
 `mine` is sorted afresh, and births, deaths, and movement change its order.
 
-### Ownership labels in the current cartridge
+### Ownership labels
 
-`mine` and `foes` reliably distinguish your ants from enemies. However, the current
-Ants implementation emits raw seat numbers in the owner field of `foes` and
-`hills`; it does **not** consistently relabel your colony as owner `0`. There is
-also no explicit self-seat field. The design calls for observer-relative labels,
-but that normalization is not implemented in this cartridge.
+Owners are **relative to you**. In `hills`, owner `0` is yours and `1` upward is an
+opponent's. In `foes`, the owner is `1` upward and never `0`, because a foe is by
+definition not you. In a two-seat preset that makes the label constant: your hills
+are `0`, every enemy hill and ant is `1`.
 
-Do not build an adapter that blindly treats every owner-0 hill as friendly.
-This is a limitation of the current observation contract; the sample below shows
-seat 0's view only. Tests covering both seats are necessary before using hill
-ownership as a feature.
+There is no self-seat field and you do not need one. Ask which seat you occupy and
+the answer is always the same: seat `0`, as far as the observation is concerned.
+Relabel every seat in the world and ask the same player again, and the bytes are
+identical — that property is what makes the two seats of one match two samples of
+one distribution, which is what a self-play trainer depends on.
+
+Earlier builds of this cartridge emitted raw seat numbers here, so an adapter that
+split hills on `owner == 0` had its friendly and enemy planes swapped for seat 1 of
+every match. That is fixed as of engine `sha256:f17b51b6c92b…`. If you are reading a
+replay recorded under an older engine, its observations do not follow this rule.
 
 ## Known water
 
