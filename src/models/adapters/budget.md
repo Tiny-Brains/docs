@@ -1,65 +1,91 @@
 # The budget
 
-Ants currently allows **1,000,000 adapter operations per direction per call**.
-The `in` program and the `out` program each receive that budget independently.
-Inference has no separate cap of its own; the whole call must meet the turn deadline.
+Ants allows **1,000,000 adapter operations per direction per call**: the `in` program and the `out`
+program each get their own million. Inference is not counted; the whole call — both programs and
+the graph — has to fit the turn deadline.
 
 ## What counts as an operation
 
-Every evaluated expression node costs 1. A loop body pays again on each element;
-an unselected conditional branch does not run and does not pay. Scalars cost 1,
-while arrays and object values in expression position are recursively evaluated.
-Large literal collections therefore still have evaluated child nodes as well as
-contributing to compressed adapter size.
+- **Every node the evaluator visits costs 1**: an operator, a literal, each element of an array
+  written in the program. A loop body pays again for every element it runs over, and a branch that
+  is not taken pays nothing.
+- **Every tensor operator also costs the larger of the elements it reads and the elements it
+  produces.** The charge is made before the work, so an operator that would exceed the budget is
+  refused rather than run.
+- **The two directions are counted apart.** `/validate` reports `ops_in` and `ops_out` for every
+  case. `/play` reports their sum, so a total over a million does not mean either direction was
+  over.
 
-Tensor operators add `max(elements read, elements produced)` to their node cost.
-Their argument expressions also pay their ordinary evaluation costs. Reshape and
-metadata helpers have no element charge.
+`{"tb.zeros": [[128, 128], "int8"]}` costs 16,389: 1 for the operator, 16,384 for the elements it
+produces, and 4 for evaluating its arguments — the shape array, its two numbers, and the dtype.
 
-For `{"tb.zeros":[[128,128],"int8"]}`, the operator and its 16,384 output
-elements cost 16,385; evaluating the shape array, its two numbers, and the dtype
-adds 4, for **16,389 total**. For argmax over `[180,5]`, the operator's own charge
-is 901 before evaluating its tensor lookup and axis arguments.
+## What each operator charges
 
-Counts describe evaluator work, not wall-clock milliseconds. The same valid
-expression and data under the same evaluator produce the same count regardless
-of the host's speed.
+On top of its own 1 and the cost of evaluating its arguments. `n` is the number of elements in the
+tensor argument, and `m` the number in the result.
+
+| Operator | Charge |
+|---|---|
+| `tb.zeros`, `tb.full` | `m` |
+| `tb.tensor` | The larger of `len(values)` and `m` |
+| `tb.scatter` | The larger of the number of points and `m`. **A scatter pays for the whole grid**, however few points it writes |
+| `tb.rle_expand` | The larger of `len(runs)` and `m` |
+| `tb.one_hot` | The larger of `len(indices)` and `m` |
+| `tb.range` | Its length |
+| `tb.stack`, `tb.concat` | The elements of all the inputs |
+| `tb.unstack`, `tb.transpose`, `tb.cast`, `tb.normalise`, `tb.dilate`, `tb.to_list` | `n` |
+| `tb.pad`, `tb.crop` | The larger of `n` and `m` |
+| `tb.argmax` | `n`: it reads everything |
+| `tb.gather` | The larger of `n` and `m`. **It reads the whole input**, not only the slices it keeps |
+| `tb.reshape`, `tb.shape`, `tb.dtype`, `tb.len`, `tb.at`, `tb.get` | Nothing: a reshape moves no elements |
+
+## What a real adapter costs
+
+The baselines' adapter — seven planes in and a dense policy map out, read in full in
+[A real adapter, piece by piece](walkthrough.md) — measured with `tinybrains check` over the
+reference observations on 11 September 2026. The worst case on each board:
+
+| Board | `in` | `out` |
+|---|---:|---:|
+| 64 × 96 | 92,284 | 31,548 |
+| 96 × 96 | 138,314 | 46,188 |
+| 128 × 128 | 245,839 | 83,068 |
+
+Both follow the board, not the ants: about 15 operations per cell in, because every plane is a full
+grid and the stack reads them all again, and about 5 per cell out, because `tb.gather` reads all
+five channels of the policy map. On the largest board that is a quarter of the budget in, and a
+twelfth of it out.
 
 ## What over budget means
 
-Execution aborts when a charge exceeds the available budget. An oversized tensor
-operation is refused before its element work begins. It is not retried with more
-budget. In admission, an over-budget adapter is rejected; during play, a failed
-answer contributes a strike.
+The direction stops the moment a charge crosses the budget, and the call answers `ADAPTER_FAILED`
+with `over_budget: true`. It is never retried: the same adapter on the same observation costs the
+same on any machine. At admission it is a rejection, `ADAPTER_OVER_BUDGET`; in a match it is a
+strike, like a missed deadline.
 
-Passing reference cases cannot guarantee every later observation fits. More ants,
-more visible objects, and larger maps can change counts. A late-game observation
-can be more demanding than the opening.
+Passing admission does not prove every later turn fits. The count is taken on real input, and a
+late-game turn — more ants, more food and foes in sight, a larger board — can cost more than any
+reference case. An adapter whose cost follows the board, as the baselines' does, is predictable;
+one whose loops run over ants or visible objects grows with the game.
 
 ## Measuring before you submit
 
-Axon's `/validate` reports `ops_in` and `ops_out` per case and `ops_max` across the
-run. Check the maximum of the two directions, not their sum, against one million.
-`/play` reports a combined `ops` count, so a total over one million need not mean
-either individual direction exceeded its limit.
-
-Use the [testing workflow](../testing.md) with real observations and constructed
-boundary cases. The existing reference-adapter test in Axon prints measured counts:
-
-```sh
-# From the axon checkout
-cargo test --test ants_adapter -- --nocapture
-```
-
-Those measurements describe the test adapter and fixture, not your entry.
+`tinybrains check model.onnx adapter.json` reports the worst case over the reference set, and
+`--json` adds `ops_in` and `ops_out` for every case. `tinybrains adapt adapter.json` prints the `in`
+count for each case, and `--obs` measures observations of your own.
+[Testing before you submit](../testing.md) has both. Compare the larger of the two directions with
+the budget, not their sum.
 
 ## Spending less
 
-Build dense planes with `tb.scatter` and `tb.rle_expand` instead of nested JSON
-loops. Derive wrapped visibility with `tb.dilate`. Avoid converting a full policy
-plane into JSON when argmax or a targeted gather can reduce it first. Reconsider
-repeated copies, stacks, and dtype conversions if they dominate your count.
+- Build planes with `tb.scatter` and `tb.rle_expand`, never with a JSON loop over cells.
+- Each plane costs about two operations per cell: one to build it and one to stack it. Drop the
+  planes your graph does not use.
+- Derive vision with `tb.dilate`. Building it by hand costs about seven times as much, and is wrong
+  at the edges.
+- A dense policy head pays for the whole map on the way out. A per-ant head pays per ant, and needs
+  per-ant inputs to be one.
+- Convert to JSON as late and as small as possible: `tb.argmax` before `tb.to_list`, never after.
 
-Keep a margin below the limit and test all [map presets](../../games/ants/maps.md).
-An adapter that fits the smallest board exactly is unlikely to be reliable on
-cell's 128 × 128 board.
+Test all three [presets](../../games/ants/maps.md): the 128 × 128 board costs 2.7 times what the
+64 × 96 one does.

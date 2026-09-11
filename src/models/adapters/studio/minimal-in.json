@@ -1,0 +1,81 @@
+{
+  "about": "the worked observation from What your model sees",
+  "templating": true,
+  "logic": {
+    "positions": {
+      "tb.tensor": [
+        {
+          "reduce": [
+            {
+              "var": "mine"
+            },
+            {
+              "merge": [
+                {
+                  "var": "accumulator"
+                },
+                {
+                  "var": "current"
+                }
+              ]
+            },
+            []
+          ]
+        },
+        [
+          {
+            "length": [
+              {
+                "var": "mine"
+              }
+            ]
+          },
+          2
+        ],
+        "float32"
+      ]
+    }
+  },
+  "data": {
+    "size": [
+      64,
+      96
+    ],
+    "mine": [
+      [
+        12,
+        30
+      ],
+      [
+        13,
+        30
+      ]
+    ],
+    "foes": [
+      [
+        12,
+        33,
+        1
+      ]
+    ],
+    "food": [
+      [
+        11,
+        31
+      ]
+    ],
+    "hills": [
+      [
+        12,
+        30,
+        0
+      ]
+    ],
+    "water": {
+      "rle": [
+        0,
+        6144
+      ]
+    }
+  }
+}

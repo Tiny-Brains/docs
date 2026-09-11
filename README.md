@@ -1,9 +1,10 @@
 # docs
 
-Docs is the TinyBrains competitor guide: an mdBook of thirty-four pages that carries a reader from
+Docs is the TinyBrains competitor guide: an mdBook of thirty-six pages that carries a reader from
 the rules of the game to a submitted model and a rating that means something. It is also the only
 repository whose pages *play* what they describe — the rules chapters embed real matches, produced
-by the same cartridge the ladder runs and replayed by the cartridge's own viewer.
+by the same cartridge the ladder runs and replayed by the cartridge's own viewer, and every adapter
+example opens in DataLogic Studio, already evaluated.
 
 ## The name
 
@@ -15,8 +16,10 @@ source and is not going to.
 
 **It owns**
 
-- The thirty-four pages, their chapter order in `src/SUMMARY.md`, and the words each uses.
+- The thirty-six pages, their chapter order in `src/SUMMARY.md`, and the words each uses.
 - The teaching replays: hand-drawn boards, written seat scripts, and the build that plays them.
+- The adapter examples under `src/models/adapters/studio/`, and `studio/studio.py`, which turns each
+  into the code a page shows and a DataLogic Studio link that encodes the same file.
 - The book's theme — the application's design system restated for the elements mdBook emits.
 - The vendored replay viewer under `src/viz/`, and the slot that mounts one in a page.
 
@@ -24,6 +27,9 @@ source and is not going to.
 
 - Own a single value it documents. Presets and budgets come from [Ants](https://github.com/Tiny-Brains/ants)' `cartridge.json`, size boundaries from [Jodi](https://github.com/Tiny-Brains/jodi)'s admission judging, opsets and scheduling from [DevOps](https://github.com/Tiny-Brains/devops)' Orion templates, asset ceilings from [Axon](https://github.com/Tiny-Brains/axon)'s configuration.
 - Draw a replay or know a rule of one; Ants ships the viewer and this repository vendors it.
+- Evaluate an adapter. DataLogic Studio runs the JSON half of an example in the reader's browser,
+  with datalogic-rs; Axon is the only evaluator whose answer counts, and every cost the book quotes
+  comes from it, through `tinybrains check` and `tinybrains adapt`.
 - Serve itself; [Web](https://github.com/Tiny-Brains/web)'s nginx mounts the rendered book today, and its own host will serve it.
 - Hold the platform's design documents, decision log, or deployment design; those stay in the repository that owns the behaviour.
 
@@ -44,6 +50,7 @@ source and is not going to.
 | copies | Web | `web/public/design-system/tokens.css` | The palette, to the digit |
 | restates | Ants, Jodi, DevOps, Axon | Their configuration | Every number on the limits, weight-class and format pages |
 | read by | Web's nginx, or the book's own host | Static HTTP | The rendered `book/` |
+| links to, embeds | DataLogic Studio | `goplasmatic.github.io/datalogic-rs/` | Every adapter example as a playground link; the embed bundle `theme/tb-studio.js` mounts in a page |
 
 The [system map](https://github.com/Tiny-Brains/devops#where-it-sits) describes the services the
 book documents. Nothing in the platform reads this repository at runtime.
@@ -74,6 +81,23 @@ component is a quarter of a megabyte and most pages do not want it. The marker c
 example's identity: `grep -rn 'replay-visualiser:' src` is the inventory, and each says `filled`,
 names what a planned recording must show, or says `BLOCKED` and why.
 
+The adapter chapter has a second slot, and a page author never writes its markup: a directive names
+an example file, relative to the page, and `studio/studio.py` expands it on every build.
+
+```text
+{{#studio studio/foe-positions.json}}          the example's logic as a JSON block, then its link
+{{#studio studio/flat-index.json nocode}}      the link alone, when the prose already shows the code
+{{#studio studio/baseline-in.json embed}}      the code, the Studio itself in the page, then the link
+```
+
+An example is `{"about", "templating", "logic", "data"}`. `about` becomes the link's caption, and
+`templating` stays `true` for an adapter: it is the Studio mode that follows the dialect's object
+rule and shows a `tb.*` call with its arguments evaluated instead of refusing it. The link is the
+Studio's own share format — `{l, d, t}` as MessagePack, raw DEFLATE, base64url in `?s=` — so it
+opens that exact example. `theme/tb-studio.js` mounts an `embed` slot with datalogic-rs's own
+mdBook widget, fetched from the Studio's site once the slot scrolls into view; without it the slot
+takes no space and the code and the link are the whole example.
+
 `src/SUMMARY.md` is the published chapter order and the page list. `create-missing = false`, so an
 entry without a file is a build error rather than a new stub.
 
@@ -83,7 +107,8 @@ All commands run from this repository's root.
 
 - **mdBook 0.5.4.** `theme/index.hbs` is that version's template, vendored; another version's
   `book.js` may look for elements it does not find.
-- Python 3, for `tutorials/make-map.py` and the build's digest check.
+- Python 3, for `studio/studio.py` — an mdBook preprocessor, so every `mdbook build` runs it — and
+  for `tutorials/make-map.py` and the build's digest check.
 - The `tinybrains` CLI and a viewer at `$ANTS_DIR/viz/dist`, to regenerate the lessons. `Dockerfile`
   takes both from artifact images and needs neither on the host; by hand, `docker cp` them out of
   `tinybrains/cli:dev` and `tinybrains/ants:dev`, or use a built checkout of each.
@@ -92,11 +117,13 @@ All commands run from this repository's root.
 mdbook build                # the whole check: no test suite, no linter
 mdbook serve                # preview at http://localhost:3000
 tutorials/build.sh          # boards -> replays -> src/tutorials, and re-vendor the viewer
+python3 studio/studio.py link src/models/adapters/studio/flat-index.json   # one example's link
 ```
 
-`mdbook build` fails on a `SUMMARY.md` entry with no file behind it, and that is the only automated
-check this repository has. Relative links, embedded values and the prose around a replay are
-verified by reading.
+`mdbook build` fails on a `SUMMARY.md` entry with no file behind it, and on a `{{#studio}}`
+directive whose example is missing, is not JSON, or lacks `logic` or `data`; those are the only
+automated checks this repository has. Relative links, embedded values, the prose around a replay,
+and what an example evaluates to in the Studio are verified by reading.
 
 `tutorials/build.sh` refuses when a replay and the vendored viewer name different engine digests. A
 viewer re-simulating with the wrong engine does not fail — it draws a plausible match that never
@@ -115,6 +142,7 @@ answers for them correctly.
 | `application/wasm` for `.wasm` | The serving layer's MIME table | `WebAssembly.compileStreaming` refuses the response and no replay draws |
 | No SPA fallback above `/viz/` | The serving layer | A wildcard that answers HTML for a missing module leaves every replay showing its fallback sentence |
 | A rebuilt `book/` | CI, or `mdbook build` by hand | `mdbook serve` overwrites `book/` with a livereload preview whose `site-url` is forced to `/` — a `serve` left running is what gets served |
+| `goplasmatic.github.io` reachable, and allowed | The reader's network, and any Content-Security-Policy the serving layer adds | Every Studio slot shows its fallback sentence; the links under the examples still open the Studio in a tab of its own |
 
 `site-url = "/"` because the book has its own host. The local stack is the one case it is wrong
 for: `devops/docker-compose.yml` binds `docs/book` into Web's nginx at `/docs/`, where the
@@ -124,8 +152,10 @@ deployment.
 ## Layout
 
 ```text
-src/                 the pages -- five sections, thirty-three chapters
+src/                 the pages -- two openers, then thirty-four chapters in five sections
 src/SUMMARY.md       the published chapter order; create-missing = false
+src/models/adapters/studio/   the adapter examples: logic, data, and what the data is
+studio/studio.py     the {{#studio}} preprocessor, and `link FILE` to print one example's URL
 src/tutorials/       generated: the lesson replays (gitignored)
 src/viz/             the cartridge's viewer bundle, from its artifact image (gitignored)
 tutorials/           the lessons' sources -- boards/*.txt, seat scripts, build.sh, make-map.py
@@ -155,6 +185,7 @@ the title, when the sidebar is away — and then the title follows it rather tha
 | `theme/index.hbs` | mdBook 0.5.4's template, vendored. Every change carries a `TINYBRAINS` comment: the logo sprite, the brand in the sidebar band and in the bar, `{{ chapter_title }}` as the page's `<h1>` in the bar, the sun/moon theme button beside the source link, and two themes instead of five |
 | `theme/tb-site.js` | The bar's theme button. It sets no theme and it does not choose the glyph — it clicks mdBook's own hidden theme buttons, which is where all the work already lives, and keeps the label saying what the click does |
 | `theme/tb-replay.js`, `theme/tb-replay.css` | The embedded replay viewer, and the frame around it |
+| `theme/tb-studio.js`, `theme/tb-studio.css` | DataLogic Studio in a page — fetched from the Studio's own site when a slot scrolls into view, and mounted again when the reader switches theme — and the link under every adapter example |
 | `theme/fonts/fonts.css` | Empty on purpose. The design system is set in the reader's own interface font, so the book ships no webfont |
 | `theme/favicon.svg` | The application's `logo-network.svg` |
 
@@ -177,6 +208,15 @@ site's components without an `!important` in sight.
   and so a decision rather than a task.
 - **No invented result.** A planned example states what a recording must show; it never names a
   match, an asset or a digest that does not exist.
+- **A Studio link is written from its example, never pasted.** A link carries its whole expression
+  and data, so one pasted beside an example is a second copy that drifts the first time either is
+  edited. The page holds a `{{#studio}}` directive; the build writes the code and the link from one
+  file.
+- **The Studio is not the referee.** It runs datalogic-rs, which agrees with Axon on the JSON half
+  but for `null` equality, has operators the dialect lacks, shows `tb.*` calls without running them,
+  and counts nothing. Every page that links to it can say so without the reader leaving the book,
+  and every claim about what the arena does — a cost, a tensor, a trap — is checked with
+  `tinybrains adapt` or `tinybrains check`, which run Axon's own evaluator.
 - **The numbers belong to whoever computes them.** `src/reference/limits.md` dates its snapshot and
   names each owner. Verify against the current producer before changing a value here.
 - **The palette is the application's, to the digit.** `theme/tokens.css` is a copy; a colour
@@ -211,6 +251,23 @@ site's components without an `!important` in sight.
   its `engine_digest` disagrees with the viewer's.
 
 ## Status
+
+**11 September 2026 — the adapter chapter explains the adapter, and every example opens in
+DataLogic Studio.** Two new pages: *A real adapter, piece by piece* reads the baselines' adapter
+plane by plane, both programs, with its measured cost; *Seeing it in DataLogic Studio* says how to
+open your own, what the Studio shows, and the places it and the arena disagree. The overview, the
+dialect, the operators, the budget and the testing page are rewritten against Axon's source: the
+object rule stated exactly (an unknown key is a silent literal, not an error), the scope trap shown
+running, every operator's charge in one table, the defaults and failure cases the operator table
+left out, and the `tinybrains check` / `tinybrains adapt` workflow. Four things were wrong and are
+not: the testing page said the reference set was one fixture observation and linked to an anchor
+that did not exist, and it and the introduction still named a compute cap.
+
+Nine examples live under `src/models/adapters/studio/`. Every link was decoded with the Studio's own
+libraries and evaluated with its engine, and every claim about the arena — the costs, the `null`
+trap, `split` as a literal, a `null` scatter coordinate landing in column 0 — was run through
+`tinybrains adapt` or `tinybrains check`. The embed is datalogic-rs's own mdBook widget, loaded from
+its site and unpinned; `design/tracker.md` holds that as a decision.
 
 **11 September 2026 — a baseline is described as an entry.** `competing/matches.md` and the
 glossary say what the platform now does: a baseline is paired, rated and settled like any entry,

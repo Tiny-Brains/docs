@@ -49,7 +49,7 @@ to the game using the platform's supported JSONLogic dialect and tensor operator
 
 Compactness includes both parts of your entry. Your weight class is determined
 by the compressed size of the model's initializer tensor data plus the compressed
-adapter. Compute caps, adapter operation budgets, and a turn deadline also apply,
+adapter. Adapter operation budgets and a turn deadline also apply,
 so an entry must be small enough for its class and efficient enough to play.
 See [model format](models/format.md), [weight classes](models/weight-classes.md),
 and [limits and budgets](reference/limits.md) for the requirements.

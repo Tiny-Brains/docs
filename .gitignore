@@ -17,3 +17,4 @@ tutorials/boards/*.json
 # anyone noticing, which is exactly what the digest check at the end of build.sh exists to catch.
 tutorials/replays/*
 !tutorials/replays/real-match.json
+__pycache__/

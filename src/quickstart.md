@@ -11,11 +11,11 @@ and export an ONNX model, and an adapter for Ants. Check the game's
 [seasons](competing/seasons.md) before preparing an entry: submissions must arrive
 inside an open window and satisfy that season's participation rules.
 
-The submission and match loop is implemented. A packaged training SDK, standalone
-ONNX match runner, and browser replay viewer are not supplied by the current
-checkout. The steps below use the existing file contracts and HTTP API; local
-validation uses Axon. You do not need to operate the platform to enter a hosted
-competition.
+The submission and match loop is implemented. There is no packaged training SDK;
+the `tinybrains` command-line tool, built from source until a release is cut,
+plays matches and runs admission's checks on your own machine. The steps below
+use the existing file contracts and HTTP API. You do not need to operate the
+platform to enter a hosted competition.
 
 ## 1. Train something small
 
@@ -35,7 +35,8 @@ admission compatibility.
 Create `adapter.json` with `dialect`, `in`, and `out`. The input program builds
 the model's tensors; the output program returns one of `N`, `E`, `S`, `W`, or `-`
 for each ant, in observation order. See the complete small example in
-[Adapters](models/adapters.md).
+[Adapters](models/adapters.md), and [a real adapter, piece by piece](models/adapters/walkthrough.md)
+for one that plays.
 
 Run the pair through [local validation](models/testing.md). Exercise all three
 map sizes, empty lists, large colonies, and fragmented known-water masks. Check

@@ -22,6 +22,7 @@ mdbook build                  # the whole check: create-missing = false, so a SU
                               # without a file is an error, not a new stub
 mdbook serve                  # preview; it overrides site-url with "/", so finish with `mdbook build`
 tutorials/build.sh            # regenerate the teaching replays and re-vendor the viewer
+python3 studio/studio.py link src/models/adapters/studio/<name>.json   # one example's Studio URL
 ```
 
 There is no test suite and no linter. **Nothing generated is committed**: `book/`, `src/viz/`,
@@ -81,6 +82,29 @@ must still teach its rule without playback.
 replay frame is the referee's view, so ground truth in either slot would teach the reader the
 opposite of the point. Filling them needs a seat view from `replay-decode` — an ABI change in Ants,
 i.e. a decision, not a task.
+
+## How a page shows an adapter
+
+The adapter chapter shows programs, and every example opens in DataLogic Studio — datalogic-rs's
+playground, `goplasmatic.github.io/datalogic-rs/playground/`. **A page never holds a Studio link.**
+It holds `{{#studio studio/<name>.json}}` (flags: `nocode`, `embed`), and `studio/studio.py`, an
+mdBook preprocessor, writes the example's code and a link whose URL encodes that same file on every
+build. A pasted link is a second copy of the example, and drifts.
+
+- An example is `{about, templating, logic, data}` in `src/models/adapters/studio/`. Keep
+  `templating: true`: without it the Studio refuses every `tb.*` operator and every object literal.
+- The link format is the Studio's own `ui/src/utils/url-share.ts` in the datalogic-rs checkout:
+  `{l, d, t}` as MessagePack, raw DEFLATE, base64url in `?s=`. If upstream changes it, every link
+  in the book opens something else and nothing here notices.
+- **The Studio runs datalogic-rs, not Axon.** It shows `tb.*` calls with their arguments evaluated
+  and builds nothing; `{"==": [0, null]}` is `true` there and `false` in the arena; `split`, `upper`
+  and nineteen others exist there and are object literals in the arena; `tb.get` inside a `reduce`
+  body breaks there. An example must evaluate in the Studio to what its page says, and anything a
+  page claims about the arena — a cost, a tensor, a trap — must come from `tinybrains adapt` or
+  `tinybrains check`, which run Axon's evaluator. `models/adapters/studio.md` is the reader's copy
+  of that list; keep the two in step.
+- `theme/tb-studio.js` mounts an `embed` slot with datalogic-rs's mdBook widget, fetched from the
+  Studio's site when the slot scrolls into view. It is unpinned; `design/tracker.md` has why.
 
 ## The theme
 

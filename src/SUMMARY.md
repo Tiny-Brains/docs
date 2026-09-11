@@ -18,6 +18,8 @@
 - [Model format](models/format.md)
 - [Weight classes](models/weight-classes.md)
 - [Adapters](models/adapters.md)
+  - [A real adapter, piece by piece](models/adapters/walkthrough.md)
+  - [Seeing it in DataLogic Studio](models/adapters/studio.md)
   - [The dialect](models/adapters/dialect.md)
   - [Operators](models/adapters/operators.md)
   - [The budget](models/adapters/budget.md)

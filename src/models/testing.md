@@ -1,30 +1,85 @@
 # Testing before you submit
 
-Validate the **exact ONNX and adapter files** you plan to release. Check interface
-correctness first, budget and timing second, and game behavior third. A successful
-forward pass alone does not show that an entry plays valid or useful actions.
+Validate the **exact ONNX and adapter files** you will release. Check the interface first, the
+budget and timing second, and the play third: a graph that runs and an adapter that returns do not
+show that an entry plays valid, or useful, actions.
 
 ## Reference observations
 
-The current deployment falls back to a single observation from Axon's
-`tests/fixtures/ants-observation.json` unless a cartridge-owned reference file is
-available. Ants does not yet ship that complete conformance observation set.
-The existing fixture represents a large, partially explored 128 × 128 board.
+Admission validates every adapter against the cartridge's **reference set**: ten observations the
+engine generates, across all three presets — 64 × 96, 96 × 96 and 128 × 128 — from a colony of two
+ants to one of twenty-eight. It validates against those and nothing else, so what they do not cover
+is not checked. The `tinybrains` commands below read the same file.
 
-Include every preset size, sparse and crowded positions, no visible enemies or
-food, fragmented known water, and ants near wrapping borders in your own tests.
-Test both seats, particularly if your features use hill ownership; the current
-[ownership-label limitation](observation.md#ownership-labels-in-the-current-cartridge)
-matters there. Check empty ant inputs in adapter tests even though eliminated
-seats normally stop receiving calls.
+Your own tests should add what the set does not: crowded and late-game boards, turns with no foes
+or food in sight, fragmented known water, ants on the wrapping edges, and an empty `mine`, even
+though a seat with no ants normally stops being called. Owners in `hills` and `foes` are
+[relative to you](observation.md#ownership-labels), so both seats of a match see the same encoding;
+replays recorded before engine `sha256:f17b51b6c92b…` do not follow that rule.
 
-## Validate with Axon
+## The `tinybrains` CLI
 
-Axon provides `/load`, `/inspect`, and `/validate` in admission mode. These are
-local service interfaces for testing and platform operation, not public Soma
-API routes. Run the [local platform](../platform/running-locally.md) to obtain an
-admission loader at `http://127.0.0.1:9091`, or configure Axon independently using
-its repository README.
+`tinybrains` is the platform's command-line tool: it plays matches on your machine and runs
+admission's checks without a server. Until a release is cut it is built from source;
+[drill](https://github.com/Tiny-Brains/drill) explains the checkout it needs, and is the place to run
+it from.
+
+### Check it the way admission will
+
+```sh
+tinybrains check model.onnx adapter.json
+```
+
+This runs Axon's own `inspect` and `validate` — the calls admission makes — over the reference set,
+and prints the graph's opset, operators, inputs and outputs, the size metric, the worst operation
+count against the budget, and the slowest inference. `--json` prints everything, including
+`ops_in`, `ops_out` and the input shapes of every case. A pass is necessary and not sufficient:
+there is no download allowlist on your machine, and the size class is decided by admission, not
+here.
+
+### See the tensors your adapter builds
+
+```sh
+tinybrains adapt adapter.json --out tensors
+```
+
+This runs only the `in` program, through Axon's evaluator, over every reference observation, and
+writes each input tensor as a numpy `.npy` file beside the observation that produced it:
+
+```text
+tensors/
+  manifest.json            evaluator digest, budget, and each case's ops_in and tensor shapes
+  case-0/observation.json
+  case-0/board.npy         one file for each input your in program names
+  case-1/…
+```
+
+`--obs FILE` runs your own observations instead: one, a list of them, or
+`{"observations": [...]}`.
+
+These are the tensors the ladder will feed your graph. **Before you train, assert that your
+trainer's encoder produces the same ones**, element for element. An encoder that disagrees with the
+adapter trains a model on inputs the arena never serves, and nothing fails: the rating is simply
+lower than training promised. [A real adapter](adapters/walkthrough.md#the-same-encoding-in-your-trainer)
+shows the test the platform's own baselines run.
+
+### Play a match
+
+```sh
+tinybrains matches/quick.json          # from a drill checkout
+tinybrains view replays/quick.json
+```
+
+A match file names a model for each seat by path, so your model can play the baselines, itself, or
+last week's version on your own machine, through the real cartridge and the real evaluator. Every
+run prints the adapter's mean operations per seat-turn.
+
+## Validate against a running loader
+
+On a [local platform](../platform/running-locally.md), the admission loader at
+`http://127.0.0.1:9091` answers the same calls over HTTP. It fetches assets by URL from allowed
+hosts, so this is the route for a release that is already published. These are service interfaces
+for testing and platform operation, not public Soma API routes.
 
 First call `POST /load` with the release asset URLs and their actual hashes:
 
@@ -40,71 +95,54 @@ First call `POST /load` with the release asset URLs and their actual hashes:
 }
 ```
 
-Replace every placeholder. Confirm `state: "resident"` for the pair. Supply the
-configured bearer credential if local Axon authentication is enabled. Admission
-mode restricts download hosts; it is not a general local-file upload endpoint.
+Replace every placeholder, and confirm `state: "resident"` for the pair. Supply the configured
+bearer credential if local Axon authentication is enabled.
 
-Save the two real hashes in `model-ref.json`, then inspect:
+Save the two hashes as `model-ref.json`, then inspect:
 
 ```sh
 curl --fail-with-body -sS http://127.0.0.1:9091/inspect   -H 'Content-Type: application/json' --data-binary @model-ref.json
 ```
 
-`model-ref.json` contains only `weights_hash` and `adapter_hash`. Read
-`size_metric_bytes`, `opset`, `ops`, `inputs`, and `outputs`. Compare them with
-[format policy](format.md) and your [class](weight-classes.md); `/inspect` reports
-facts and does not decide admission by itself.
+Read `size_metric_bytes`, `opset`, `ops`, `inputs` and `outputs`, and compare them with the
+[format policy](format.md) and your [class](weight-classes.md). `/inspect` reports facts; it does
+not decide admission.
 
-Next call `POST /validate` with the hashes, `budget_ops: 1000000`,
-`deadline_ms: 1000`, and `observations`, an array of your observation objects.
-Saving this body in `validation.json` allows:
+Then call `POST /validate` with the hashes, `budget_ops: 1000000`, `deadline_ms: 1000`, and
+`observations`, an array of observation objects. With that body saved as `validation.json`:
 
 ```sh
 curl --fail-with-body -sS http://127.0.0.1:9091/validate   -H 'Content-Type: application/json' --data-binary @validation.json
 ```
 
-Inspect the JSON body's `ok` field, not only the HTTP status. On failure, read
-`reason`, `detail`, `failing_case`, and `over_budget`. On success, compare the
-reported `inputs`, per-direction counts, and `infer_us_max` to your expected shapes
-and limits. `infer_us_max` is the slowest reference case's inference in microseconds;
-compare it against the turn deadline, divided by the seats a wave plays at once. Admission currently allows 5,000 ms per validation observation;
-using the actual 1,000 ms turn deadline locally is an additional check, not an
-exact reproduction of that admission timeout.
+Read the body's `ok` field, not only the HTTP status. On failure, read `reason`, `detail`,
+`failing_case` and `over_budget`. On success, compare each case's `inputs`, `ops_in` and `ops_out`,
+and the run's `infer_us_max`, with what you expect. `infer_us_max` is the slowest case's inference
+in microseconds; compare it with the turn deadline divided by the seats a wave plays at once.
+Admission allows 5,000 ms per validation observation, so using the real 1,000 ms turn deadline
+locally is the stricter check.
 
-Release your local hold afterward with `POST /unload` and a `models` array
-containing the pair of hashes.
+Release the hold afterwards with `POST /unload` and a `models` array holding the pair of hashes.
 
 ## Check the actions too
 
-Validation reports `action_shape`, but does not enforce all Ants action semantics.
-Use a replica-mode loader's `/play` or an adapter-level harness to inspect the
-actual action. Assert its length equals `mine` and every item is an allowed
-string. Use known output scores to verify direction-channel order and tie handling.
-Admission-mode Axon deliberately does not serve `/play`.
-
-## Playing a match locally
-
-There is no packaged offline ONNX match runner yet. The available end-to-end
-route is the local Compose stack: enter a release into an open local season and
-let admission, the trial, and matchmaking execute it. This requires a configured
-GitHub sign-in and runnable opponents. See [Running locally](../platform/running-locally.md).
-
-You can test the Ants engine's replay reconstruction independently, without ONNX:
+`validate` reports each case's `action_shape` — `array[17] of string`, say — but does not check
+Ants' action rules. Assert for yourself that the action has one entry per ant in `mine`, and that
+every entry is one of `N`, `E`, `S`, `W` and `-`. Feed known scores through `out` to check the
+channel order, and how ties fall. Then play a match and count the moves: a model whose hold channel
+wins everywhere plays valid actions and never moves.
 
 ```sh
-# From the ants checkout
-cargo test a_replay_re_simulates_the_match_it_recorded
+python3 -c "import json,collections; d=json.load(open('replays/quick.json')); \
+  print(collections.Counter(c for t in d['deltas'] for s in t['a'] for c in s))"
 ```
-
-This checks an engine property; it does not validate your model.
 
 ## Before publishing
 
-Confirm all preset shapes, both adapter directions, action order, class size,
-compute caps, and turn timing. Hash the final files after every edit. Once ranked
-matches are available, review losses and draws to distinguish interface problems
-from tactical weaknesses. Keep the release tag, model ID, and hashes with your
-training notes so results remain attributable to the version that produced them.
+Confirm every preset's shapes, both adapter directions, the action order, the size class, and the
+turn timing. Hash the final files after every edit: reformatting an adapter changes its hash and its
+size. Keep the release tag, the model ID and both hashes with your training notes, so that a result
+can always be traced to the version that produced it.
 
 
 <div class="tb-replay" data-src="tutorials/4-growth.json" data-turn="2" data-zoom="6"></div>

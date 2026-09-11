@@ -1,25 +1,27 @@
 # Operators
 
-These are the tensor and helper operators implemented by adapter dialect 1.
-Write each invocation as `{"tb.name":[arguments]}`. `T` below denotes an opaque
-tensor, shapes are non-negative integer lists, and axes are zero-based.
+The tensor operators of dialect 1, and four small helpers. Each is invoked as
+`{"tb.name": [arguments]}`. Below, `T` is a tensor, a shape is a list of non-negative integers, and
+axes count from 0. What each one costs is in [The budget](budget.md#what-each-operator-charges).
 
 ## Building tensors
 
-| Operator | Arguments | Result and behavior |
+| Operator | Arguments | Result |
 |---|---|---|
-| `tb.zeros` | `shape, dtype` | Tensor filled with zero |
-| `tb.full` | `shape, dtype, value` | Tensor filled with a scalar |
-| `tb.tensor` | `values, shape, dtype` | Flat list to tensor; length must equal the shape's element count |
-| `tb.scatter` | `points, shape, dtype, value?` | Zero tensor with indexed points written; default value 1 |
-| `tb.rle_expand` | `runs, shape, dtype` | Expand value/count pairs in row-major order |
-| `tb.one_hot` | `indices, depth, dtype` | Tensor of shape `[len(indices), depth]` |
-| `tb.range` | `n` | JSON list `0` through `n−1` |
+| `tb.zeros` | `shape, dtype` | A tensor of zeros |
+| `tb.full` | `shape, dtype, value` | A tensor filled with `value` |
+| `tb.tensor` | `values, shape, dtype` | A **flat** list, laid out in row-major order. Its length must equal the shape's element count, or the call fails; a value that is not a number becomes `0` |
+| `tb.scatter` | `points, shape, dtype, value?` | Zeros, with each point written: `[r, c]` writes `value` (default `1`), and `[r, c, v]` writes `v` |
+| `tb.rle_expand` | `runs, shape, dtype` | `[v0, n0, v1, n1, …]` expanded in row-major order. Runs past the end fail; runs short of it are padded with zeros |
+| `tb.one_hot` | `indices, depth, dtype` | `[len(indices), depth]`, with a `1` at each index. An index outside `0 … depth − 1` gives a row of zeros. There is no axis argument |
+| `tb.range` | `n` | The JSON list `[0, 1, …, n − 1]`, not a tensor |
 
-For a two-dimensional scatter, `[r,c]` writes the default and `[r,c,v]` writes
-`v`. Out-of-bounds points are dropped, not wrapped, and later repeated points
-overwrite earlier ones. Strip owner tags from `foes` before scattering a binary
-presence plane, or the owner number will become the stored value.
+A scatter point outside the shape is **dropped, not wrapped**, and a later point on the same cell
+overwrites an earlier one. Every value is saturated to the dtype as it is written: `300` into
+`int8` is `127`, not a wrapped `44`.
+
+A point's third element is a value, which is why foes and hills are stripped to `[r, c]` before
+they make a presence plane:
 
 ```json
 {"tb.scatter": [
@@ -29,36 +31,35 @@ presence plane, or the owner number will become the stored value.
 ]}
 ```
 
-`tb.rle_expand` rejects runs exceeding the shape and pads a short expansion with
-zeros. Valid Ants observations already cover the exact map area. `tb.one_hot`
-leaves invalid indices as zero rows; it has no supported axis argument.
+The `map` inside it, run against an observation:
+
+{{#studio studio/foe-positions.json nocode}}
 
 ## Reshaping and combining
 
-| Operator | Arguments | Meaning |
+| Operator | Arguments | Result |
 |---|---|---|
-| `tb.stack` | `tensors, axis, dtype?` | Insert an axis; all input shapes must agree |
-| `tb.concat` | `tensors, axis` | Join along an existing axis |
-| `tb.unstack` | `T, axis` | Remove an axis into a list of tensors |
-| `tb.reshape` | `T, shape` | Change shape while keeping the element count |
-| `tb.transpose` | `T, perm` | Reorder axes by a permutation |
-| `tb.pad` | `T, before, after, value` | Add cells before and after each axis |
-| `tb.crop` | `T, offset, shape` | Extract a region |
+| `tb.stack` | `tensors, axis, dtype?` | A new axis at `axis`. Every input must have the same shape. The optional dtype converts, with saturation |
+| `tb.concat` | `tensors, axis` | Joined along an existing axis. Every other dimension must agree |
+| `tb.unstack` | `T, axis` | A JSON list of tensors, one for each index along `axis` |
+| `tb.reshape` | `T, shape` | The same elements in a new shape. The element counts must match, and there is no `-1` |
+| `tb.transpose` | `T, perm?` | The axes reordered: `perm[i]` is the input axis that becomes axis `i`. Without `perm`, the axes are reversed |
+| `tb.pad` | `T, before, after, value` | `before[d]` and `after[d]` cells added on each axis `d`, filled with `value` (default `0`) |
+| `tb.crop` | `T, offset, shape` | The `shape`-sized region that starts at `offset`. Any part of it past the input's edge is zeros |
 
-Use non-negative dimensions and explicit axes; do not assume ONNX conventions
-such as a reshape dimension of `-1` are supported in the adapter.
-Stacking four `[H,W]` planes on axis 0 yields `[4,H,W]`. Reshaping to
-`[1,4,H,W]` adds the batch dimension expected by a matching graph.
+Stacking seven `[H, W]` planes on axis 0 gives `[7, H, W]`, and reshaping that to `[1, 7, H, W]`
+adds the batch axis a graph expects. [A real adapter](walkthrough.md#stacking-and-the-batch-axis)
+builds the second shape from the observation's size, so one adapter serves every board.
 
 ## Converting and deriving
 
-| Operator | Arguments | Meaning |
+| Operator | Arguments | Result |
 |---|---|---|
-| `tb.cast` | `T, dtype` | Convert with saturation for integer limits |
-| `tb.normalise` | `T, mean, scale` | `(x − mean) × scale`, producing `float32` |
-| `tb.dilate` | `T, radius2` | Mark cells around nonzero cells, wrapping the last two axes |
+| `tb.cast` | `T, dtype` | Converted. Integer dtypes saturate and truncate toward zero |
+| `tb.normalise` | `T, mean, scale?` | `(x − mean) × scale`, as `float32`. `scale` defaults to `1` |
+| `tb.dilate` | `T, radius2` | `1` at every cell within squared distance `radius2` of a non-zero cell, on the last two axes and **wrapping** at the edges; `0` elsewhere |
 
-A visibility plane in `in` scope can be built directly:
+A visibility plane, built in `in`:
 
 ```json
 {"tb.dilate": [
@@ -67,30 +68,27 @@ A visibility plane in `in` scope can be built directly:
 ]}
 ```
 
-Dilation uses the squared radius and wraps; scatter itself does not. Do not use
-an ordinary clipped neighbourhood expansion to model Ants vision at borders.
+`tb.dilate` wraps and `tb.scatter` does not. Build vision with the operator, not by adding offsets
+to each ant: those offsets fall off the edge instead of wrapping round, and the wrap needs the
+board's size, which a loop body cannot see.
 
 ## Reading tensors and values
 
 | Operator | Arguments | Result |
 |---|---|---|
-| `tb.argmax` | `T, axis` | Flat JSON list of winning indices after reducing the axis; first maximum wins ties |
-| `tb.gather` | `T, indices, axis` | Tensor selected along an axis |
-| `tb.to_list` | `T` | Nested JSON list matching the tensor shape |
-| `tb.shape` | `T` | Shape list |
-| `tb.dtype` | `T` | Dtype string |
-| `tb.len` | `list` | Length; also accepts strings |
-| `tb.at` | `list, i` | Item; negative indices count from the end, out-of-range returns null |
-| `tb.get` | `value, path` | Lookup on an evaluated value; absent path returns null |
+| `tb.argmax` | `T, axis` | A flat JSON list: the winning index along `axis` for every position of the other axes, in row-major order. On a tie, the first wins |
+| `tb.gather` | `T, indices, axis?` | A **tensor** of the slices at `indices` along `axis` (default `0`). An index past the end fails the call |
+| `tb.to_list` | `T` | The tensor as nested JSON lists |
+| `tb.shape` | `T` | Its shape, as a list |
+| `tb.dtype` | `T` | Its dtype, as a string |
+| `tb.len` | `list` | Its length; a string's length in characters; `0` for anything else |
+| `tb.at` | `list, i` | The item at `i`. A negative `i` counts from the end, and out of range is `null` |
+| `tb.get` | `value, path` | `var`'s path lookup, applied to any value instead of to the document. A path that does not resolve is `null` |
 
-`tb.gather` does not return JSON. Apply a conversion before including its result
-in an action. For a `[N,5]` policy tensor, `tb.argmax` on axis 1 already returns
-the `N` indices needed by the [example adapter](../adapters.md).
+Only `tb.argmax` and `tb.to_list` turn a tensor into JSON. `tb.gather` selects and still returns a
+tensor, so an `out` program that ends in one fails: the action must be JSON. For a `[N, 5]` policy,
+`tb.argmax` on axis 1 is already the `N` indices an action needs, as in
+[the minimal adapter](../adapters.md#a-minimal-adapter).
 
-## Costs at a glance
-
-Each evaluated expression node costs 1, and element-moving operators additionally
-charge the larger of elements read and elements produced. Metadata helpers and
-reshape have no element charge. Argument expressions are counted separately.
-Building and stacking a plane therefore pays for both operations even if the
-result has the same dtype. See [The budget](budget.md) for measurement and examples.
+`tb.to_list` is priced per element like every other operator, so converting a whole board costs the
+whole board. Reduce first, with `tb.argmax` or `tb.gather`.

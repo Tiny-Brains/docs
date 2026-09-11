@@ -18,12 +18,15 @@ create-missing = false          # a SUMMARY entry with no file is an error, not 
 # tokens.css   the application's palette, copied across from web/public/design-system/tokens.css
 # tinybrains.css  mdBook's variables answered in Cobalt, and the site's bar, footer and components
 # tb-replay.css   the frame around an embedded match
-additional-css = ["theme/tokens.css", "theme/tinybrains.css", "theme/tb-replay.css"]
+# tb-studio.css   the slot DataLogic Studio mounts in, and the link under every adapter example
+additional-css = ["theme/tokens.css", "theme/tinybrains.css", "theme/tb-replay.css", "theme/tb-studio.css"]
 
 # The replay viewer, on any page that has a `.tb-replay` slot. The script pulls the viewer module
 # in only when a page actually uses one -- the cartridge is a quarter of a megabyte and most pages
 # do not want it. tb-site.js wires the footer's theme switch to mdBook's own theme machinery.
-additional-js = ["theme/tb-replay.js", "theme/tb-site.js"]
+# tb-studio.js does the same for DataLogic Studio, which is five megabytes and comes from the
+# Studio's own site, and waits until a slot scrolls into view before fetching it.
+additional-js = ["theme/tb-replay.js", "theme/tb-site.js", "theme/tb-studio.js"]
 
 # Cobalt's default is dark, and so is the book's. `navy` and `light` are the two theme names
 # theme/index.hbs offers; both are load-bearing names, not labels -- see the note there.
@@ -43,6 +46,15 @@ site-url = "/"
 # platform, and the book is one of nine repositories under it. There is no `edit-url-template` --
 # the pencil it feeds is gone from the bar, so the setting would configure nothing.
 git-repository-url = "https://github.com/Tiny-Brains/"
+
+# A STUDIO LINK IS WRITTEN FROM ITS EXAMPLE, NEVER PASTED. A DataLogic Studio link carries its whole
+# expression and data in the URL, so a link pasted beside an example is a second copy of it that
+# drifts the first time one is edited. studio/studio.py expands `{{#studio example.json}}` into the
+# example's code AND a link encoding that same file, on every build. It needs python3, which the
+# Rust image the Dockerfile builds the book in already has.
+[preprocessor.studio]
+command = "python3 studio/studio.py"
+after = ["links"]
 
 [output.html.fold]
 enable = true

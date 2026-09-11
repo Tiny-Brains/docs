@@ -12,6 +12,7 @@
 | Cartridge | A game's rules, observations, scoring, generation, and replay reconstruction in a WebAssembly component |
 | Class | A model's assigned compressed-size category: Nano, Micro, Mini, Small, or Large |
 | Conservative rating | Displayed strength estimate, `mu − 3 × sigma` |
+| DataLogic Studio | A JSONLogic editor and debugger that draws an adapter and runs its JSON half; not the arena's evaluator |
 | Dialect | The versioned expression language accepted in an adapter |
 | Engine digest | Identity of the game component bytes used for a match |
 | Evaluator digest | Identity of the adapter evaluator's semantics |
