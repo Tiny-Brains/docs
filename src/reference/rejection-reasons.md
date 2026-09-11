@@ -14,12 +14,26 @@ These occur before a new version is successfully recorded.
 | `season_not_open` | No season accepting submissions | Read the season dates and wait for an open window |
 | `not_a_participant` | Account not admitted by the season's participant rule | Check eligibility with the organizer |
 | `weights_already_entered` | Another owner already holds these weights under the season's rule | Check the rule scope and submit an eligible entry |
-| `409` duplicate release | Same repository/tag already entered this season | Publish a new tag for changed bytes |
-| `409` candidate conflict | A testing or verified candidate already exists | Follow that candidate to a verdict |
+| `409` duplicate release | This model has already entered that tag this season | Publish a new tag for changed bytes |
+| `version_in_flight` | This model already has a testing or verified candidate | Follow that candidate to a verdict; your other models are unaffected |
+| `unknown_model` | No model of yours publishes from that repository | Create the model first — a submission never creates one |
+| `model_retired` | The model takes no new releases | Revive it, or submit to another |
+| `too_many_in_flight` | You are at the season's limit for versions in admission at once | Wait for one to reach a verdict |
+| `too_many_versions` | You have entered as many versions as the season allows | The next season starts you fresh |
+| `cooling_down` | The season asks for a gap between one model's submissions | The response carries the instant you may try again |
+| `entries_max` | You hold as many models as the season allows | Retire one to free a slot |
+| `repo_invalid` | The URL does not name exactly one repository | Give `owner/name`, or the repository's own page |
+| `repo_not_owned` | The repository is not in your account | Use one you own, or an organisation the season allows |
+| `repo_taken` | You already have a model on that repository | One repository is one model; submit a release to it |
+| `model_name_taken` | You already have a model with that name | Names are how yours are told apart |
 | `401` / `session_revoked` | Session absent, invalid, expired, or revoked | Sign in again |
 
 The current uniqueness-conflict response comes from the platform's database error
 mapping; do not depend on an invented `duplicate_release` error code.
+
+`cooling_down` is the one refusal that can legitimately disagree with itself
+between two calls a second apart, because it is a function of the current time.
+That is why it reports the instant you may retry rather than a yes or no.
 
 ## Release assets and graph
 
@@ -30,7 +44,12 @@ mapping; do not depend on an invented `duplicate_release` error code.
 | `TOO_LARGE` | Raw asset ceiling or maximum compressed class size exceeded | Measure both files and reduce the relevant size |
 | `GRAPH_INVALID` | ONNX cannot build a runnable session | Re-export and test the exact file in Axon |
 | `OPSET_UNSUPPORTED` | Opset outside deployed policy | Export within the supported range |
-| `OP_NOT_ALLOWED` | Graph uses an unlisted operator | Inspect the exported nodes and use supported operations |
+| `OP_NOT_ALLOWED` | Graph uses an operator this season does not allow | Inspect the exported nodes and use supported operations |
+| `CLASS_NOT_OFFERED` | It measured into a weight class this season does not run | Reach a class the season offers — this is not the same as being too large |
+| `CLASS_FULL` | You already hold the season's limit of models in that class | Retire one in that class, or aim at another |
+| `PARAMS_EXCEEDED` | More parameters than this season allows | Reduce the parameter count, not only the bytes |
+| `DTYPE_NOT_ALLOWED` | The weights are stored in an element type this season does not accept | A quantised-only season lists `int8`; export with quantised weights, not merely quantised inputs |
+| `TOO_SLOW` | Slower than this season's inference ceiling | Rare: most seasons set none. Simplify the graph |
 
 A compute-cap failure does not automatically move the entry to a larger class.
 See [model format](../models/format.md) and [weight classes](../models/weight-classes.md).

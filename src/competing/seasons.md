@@ -21,17 +21,60 @@ closing timestamp. A submission received in time may still be undergoing
 admission or a trial when the window ends; the settling period permits that work
 to complete unless the season is administratively closed.
 
-## Rules that can affect entry
+## The rules a season declares
 
-A season can restrict entry to a participant list. It can also require unique
-weights, preventing a different owner from entering an already-recorded weight
-hash. That uniqueness rule can apply across the game or only within the season;
-rejected entries do not count, and reusing your own weights is permitted by this
-rule. The separate duplicate-release constraint still applies within a season.
+A season carries a rules document, and it is the whole description of that
+contest. Every rule is optional; a season that declares none behaves exactly as
+the platform's own defaults, which is why two seasons can feel entirely different
+without anything in the platform changing between them.
 
-Check the returned `rules` rather than assuming every season is open to every
-account. Request refusals identify `season_not_open`, `not_a_participant`, or
-`weights_already_entered` as appropriate.
+**Who may enter**
+
+- A **participant list** of GitHub usernames — a class, a lab, an invited cohort.
+  The list is matched at each submission rather than resolved once when the season
+  was created, so someone who signs in for the first time halfway through the term
+  is admitted without an edit.
+- **Which organisations count as yours**, for competitors entering from a shared
+  account rather than a personal one.
+
+**How much you may enter**
+
+- How many **models** you may hold, and how many of them may sit in one weight
+  class.
+- How many of your **versions** may be in admission at once, across every model.
+- How many **releases** you may enter — per model, or in total.
+- A **cooldown** between one model's submissions.
+
+**What may be entered**
+
+- Which **weight classes** the season runs. A model measuring into one it does not
+  run is rejected `CLASS_NOT_OFFERED`.
+- The **ONNX surface**: an opset range, an operator allowlist, a parameter
+  ceiling, an adapter instruction budget. A season may only narrow the platform's,
+  never widen it — an operator the runtime cannot execute would otherwise be
+  admitted and then fail at play.
+- Which **element types the weights may be stored in** — a quantised-only season
+  lists `int8` and nothing else. This is measured on the weights themselves, not on
+  the graph's inputs and outputs: a network with float32 ports may hold int8
+  weights, which is what quantisation is.
+- Whether **duplicate weights** are allowed, and in what scope: across the game,
+  within the season, or not even from you twice.
+
+**How the ladder plays and how it is read**
+
+- Which **maps** are played, how much **cross-class** play connects the Open
+  ladder, and how many matches a version is given.
+- Whether two of **your own models may meet**. They may not, unless a season says
+  otherwise: a match between two of your models would move rating between them for
+  free.
+- What a **standing** is: your best model, your best in each class, or a total —
+  and how many of your models may appear on one ladder at all.
+- The **rating** constants, and what counts as settled.
+
+Read the returned `rules` rather than assuming any of this. Every restriction is
+reported by `GET /v1/games/{game}/submission` *before* you make a request, in the
+same words the refusal would use — so a season's rules are something you can read
+rather than discover.
 
 ## How a season closes
 
@@ -49,7 +92,10 @@ requirements.
 
 ## What carries over
 
-Competitor versions do not automatically roll into the next season. Enter again
+Your models persist across seasons; their *entries* do not. A model you created
+last season is still yours, with its name, its repository and its whole history —
+but nothing it entered rolls forward, and competing in the new season means
+submitting a release to it there. Enter again
 when its window opens; the same release may be submitted in a later season.
 Promotion and predecessor rating inheritance are confined to one season.
 The platform can carry baseline opponents into a new season with new rating

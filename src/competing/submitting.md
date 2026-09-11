@@ -1,8 +1,14 @@
 # Submitting a version
 
-A submission identifies a public GitHub release containing your model and adapter.
-The API records a new version; [admission](admission.md) and an unrated
-[trial](trial.md) decide whether it becomes active.
+A submission identifies a public GitHub release containing your model and adapter,
+and says which of your [models](models.md) it is a version of. The API records a
+new version; [admission](admission.md) and an unrated [trial](trial.md) decide
+whether it becomes that model's active version.
+
+Create the model first. A submission never creates one: a repository with no model
+behind it is refused `unknown_model` rather than adopted, because a typo in a
+repository path would otherwise start a second lineage with its own version
+numbers and its own rating.
 
 ## Prepare the release
 
@@ -22,9 +28,10 @@ on Linux or `shasum -a 256 model.onnx adapter.json` on macOS. Prefix each digest
 with `sha256:` in the request. Whitespace changes in JSON change the hash too.
 
 The platform verifies and mirrors the admitted bytes. Later edits to a release
-do not update an admitted version. Publish a new tag for a new attempt: the same
-owner, game, repository, and tag cannot be entered twice in one season, even if
-the earlier version was rejected.
+do not update an admitted version. Publish a new tag for a new attempt: one model
+cannot enter the same tag twice in one season, even if the earlier version was
+rejected. The next season is a fresh start, and the same tag may be entered again
+there.
 
 ## Make the call
 
@@ -43,7 +50,7 @@ const response = await fetch('/v1/submissions', {
   headers: {'Content-Type': 'application/json'},
   body: JSON.stringify({
     game: 'ants',
-    repo: 'your-handle/your-repository',
+    model: 'your-handle/your-repository',
     release_tag: 'v1',
     weights_hash: 'sha256:<64 hexadecimal digits>',
     adapter_hash: 'sha256:<64 hexadecimal digits>'
@@ -54,25 +61,34 @@ if (!response.ok) throw new Error(JSON.stringify(result));
 console.log(result);
 ```
 
+`model` names the model this release belongs to, either as its repository path or
+as the `model_id` the create call returned.
+
 The hashes must be actual 64-digit values; the placeholders intentionally are
-not valid. A successful response has status `201` and fields `model_id`,
-`version`, `status`, `season`, `weights_hash`, and `adapter_hash`. Store the model
-ID to follow this exact version. Version numbers increase per owner and game.
+not valid. A successful response has status `201` and fields `version_id`,
+`model_id`, `model`, `repo`, `version`, `status`, `season`, `weights_hash`, and
+`adapter_hash`. Store the version ID to follow this exact version.
+
+**Version numbers restart per model.** Your second model's first release is v1,
+not v4 — a lineage whose history began at 4 because you had an earlier model would
+be a number the Version screen could not explain.
 
 ## Season and candidate restrictions
 
 The API chooses the game's open season. You cannot use this endpoint to target a
-closed or future season. The season may restrict participant accounts or require
-weights not already entered by a different owner, either within the season or
-across the game.
+closed or future season. What else a season restricts is the season's own to
+declare — see [Seasons](seasons.md) for the whole list — and every restriction is
+reported before the request as well as after it, in the same words.
 
-Only one `testing` or `verified` candidate per owner and game may exist at a time.
-A currently active version does not prevent a replacement submission. Wait for
-the candidate to become active or rejected before submitting another.
+**One `testing` or `verified` version per model may exist at a time.** That rule
+is per model, so a competitor with three models may have three versions in
+admission at once; a season may additionally cap how many of yours may be in
+flight together. A model's currently active version does not prevent a
+replacement submission to it.
 
 ## What happens next
 
-Read `GET /v1/models/{model_id}`. Initially status is `testing`, with phase
+Read `GET /v1/versions/{version_id}`. Initially status is `testing`, with phase
 `queued` or `verifying`. A successful admission changes it to `verified` and
 `awaiting_trial`; successful trial completion promotes it to `active`.
 

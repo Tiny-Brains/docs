@@ -54,7 +54,7 @@ Read the failure attribution before changing your model.
 The version stays `verified` during queueing and play. Read its `trial.status`:
 `pending` is queued, `claimed` is assigned to a worker, and `running` is in progress.
 `finished` can briefly precede the verdict because counting is asynchronous.
-A verified candidate continues to occupy your one in-flight slot.
+A verified candidate continues to occupy that model's one in-flight slot, and counts against any per-competitor limit the season sets.
 
 A trial can take many turns, and a busy or unavailable arena can add queue time.
 If the wait is unexpectedly long, retain the candidate and trial IDs and ask the

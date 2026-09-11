@@ -53,7 +53,7 @@ A model fault, such as a hash mismatch, unsupported operator, incompatible shape
 or over-budget adapter, produces a rejection reason. Correct the files, validate
 locally, and create a new release tag. See [rejection reasons](../reference/rejection-reasons.md).
 
-A rejection does not replace your previous active version. Keep using that
+A rejection does not replace that model's previous active version, and does not touch your other models. Keep using that
 version's matches to evaluate your next change while fixing the candidate.
 
 ## When the platform cannot complete the check

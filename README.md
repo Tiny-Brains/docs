@@ -1,6 +1,6 @@
 # docs
 
-Docs is the TinyBrains competitor guide: an mdBook of thirty-three pages that carries a reader from
+Docs is the TinyBrains competitor guide: an mdBook of thirty-four pages that carries a reader from
 the rules of the game to a submitted model and a rating that means something. It is also the only
 repository whose pages *play* what they describe — the rules chapters embed real matches, produced
 by the same cartridge the ladder runs and replayed by the cartridge's own viewer.
@@ -15,7 +15,7 @@ source and is not going to.
 
 **It owns**
 
-- The thirty-three pages, their chapter order in `src/SUMMARY.md`, and the words each uses.
+- The thirty-four pages, their chapter order in `src/SUMMARY.md`, and the words each uses.
 - The teaching replays: hand-drawn boards, written seat scripts, and the build that plays them.
 - The book's theme — the application's design system restated for the elements mdBook emits.
 - The vendored replay viewer under `src/viz/`, and the slot that mounts one in a page.

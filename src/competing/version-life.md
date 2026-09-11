@@ -25,10 +25,12 @@ historical standings.
 ## Promotion
 
 While the candidate is testing or playing its trial, the predecessor remains
-active. Passing the trial promotes the candidate and supersedes the predecessor
+active. Passing the trial promotes the candidate and supersedes THE SAME MODEL'S
+previous active version
 in the same season. Rejection leaves the predecessor in place.
 
-Only one candidate per owner and game can be in `testing` or `verified` at once.
+Only one candidate per MODEL can be in `testing` or `verified` at once. A season
+may additionally cap how many of yours may be in flight across all your models.
 A trial pass, rather than submission time or static verification, is what
 triggers replacement.
 

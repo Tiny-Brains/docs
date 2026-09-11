@@ -25,6 +25,7 @@
 
 # Competing
 
+- [Models and versions](competing/models.md)
 - [Submitting a version](competing/submitting.md)
 - [Admission](competing/admission.md)
 - [The trial](competing/trial.md)

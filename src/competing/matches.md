@@ -16,6 +16,11 @@ for a new version and two in steady state. These are scheduling controls, not a
 guaranteed number of matches in an hour. Opponent selection can also involve a
 version already serving other matches. Trials have one live match at a time.
 
+No match ever seats two of your own models, unless a season explicitly permits
+it — a match between two of yours would move rating between them for free. A
+season may also cap how much of the queue one competitor's models can hold at
+once, so a large portfolio does not crowd out a small one.
+
 Baselines are platform-provided model entries used as opponents and rating
 reference points. They run through the same model and game interfaces; there is
 no special “beat the baseline” admission requirement.

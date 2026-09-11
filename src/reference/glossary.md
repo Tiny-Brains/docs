@@ -24,7 +24,8 @@
 | Kalam | Package that claims and executes matches and records replays |
 | Ladder | A ranking with its own rating estimates: a size class or Open |
 | Match | One game among specified model versions, recorded from queueing through its outcome |
-| Model ID | UUID identifying one submitted version |
+| Model | A competitor's entry: one GitHub repository, a name, and every version entered from it. A competitor may hold several |
+| Model ID | UUID identifying one model |
 | Observation | The information a game gives one seat to choose its next action |
 | Open | The ladder where models of different sizes compete |
 | Placement | Early scheduling intended to gather enough evidence about a new version |
@@ -39,10 +40,11 @@
 | Settled | Sufficiently established under rating and placement policy to need fewer scheduled matches |
 | Soma | Public API and owner of the platform database schema |
 | Strike | One failed turn answer counted toward a match forfeit |
-| Superseded | A version replaced by a successful candidate in the same season |
+| Superseded | A version replaced by a successful candidate OF THE SAME MODEL, in the same season |
 | Trial | An unrated match checking whether a verified candidate can play |
 | Verified | Admission passed, but trial promotion has not yet occurred |
-| Version | One submission of model and adapter assets belonging to an owner, game, and season |
+| Version | One submission of model and adapter assets: a release entered under one model, in one season. Version numbers restart per model |
+| Version ID | UUID identifying one version — what a seat, a rating and a replay point at |
 | Wave | A group of matches advanced turn by turn by one worker |
 | Weight hash | SHA-256 of the exact ONNX asset, separate from its compressed size metric |
 | Withdrawal | Cancellation of a queued match that is no longer eligible to play |

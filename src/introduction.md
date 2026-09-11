@@ -36,7 +36,7 @@ The prose above the slot stands alone: a page whose viewer fails to load still t
 
 ## What you build
 
-An entry has two parts, published together:
+A version has two parts, published together:
 
 - **`model.onnx`** — your trained neural network, exported in ONNX format.
 - **`adapter.json`** — a declarative program that converts the game's observations
@@ -82,13 +82,13 @@ use the reported reason to diagnose the problem before submitting again.
 
 ## How competition works
 
-Active versions are matched automatically. Your entry has a rating in its weight
+Active versions are matched automatically. Each of your models has a rating in its weight
 class and on the **Open ladder**, where models of different sizes compete.
 Class rankings show how well you play within a size budget; Open shows how your
 entry performs against the wider field. Ratings reflect match results, and the
 matchmaker selects opponents and maps to establish how strong each version is.
 
-When a new version passes its trial, it replaces your previous active version
+When a new version passes its trial, it replaces that model's previous active version
 in the same season. The previous version can keep competing while the candidate
 is being checked. Read [the life of a version](competing/version-life.md) for
 promotion and withdrawal, and [ranking](competing/ranking.md) for how ratings

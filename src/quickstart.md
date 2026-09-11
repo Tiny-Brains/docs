@@ -58,15 +58,23 @@ Keep the files unchanged after hashing. The submission uses `sha256:` followed
 by each file's 64 hexadecimal digits. A GitHub source archive is not a substitute
 for the two attached assets.
 
-## 4. Submit it
+## 4. Create the model, then submit to it
 
-Sign in through the competition's GitHub sign-in flow. Submit this JSON to
-`POST /v1/submissions` using the authenticated session:
+Sign in through the competition's GitHub sign-in flow. A model is your entry: one
+repository, a name, and every release you enter from it. Create it once:
 
 ```json
+POST /v1/games/ants/models
+{ "name": "First try", "url": "https://github.com/your-handle/your-repository" }
+```
+
+Then submit the release to it:
+
+```json
+POST /v1/submissions
 {
   "game": "ants",
-  "repo": "your-handle/your-repository",
+  "model": "your-handle/your-repository",
   "release_tag": "v1",
   "weights_hash": "sha256:<64 hex digits for model.onnx>",
   "adapter_hash": "sha256:<64 hex digits for adapter.json>"
@@ -74,28 +82,30 @@ Sign in through the competition's GitHub sign-in flow. Submit this JSON to
 ```
 
 Replace the illustrative hash values; they are not valid hashes. Save the
-returned `model_id`. A `201` response creates a `testing` version, which still
+returned `version_id`. A `201` response creates a `testing` version, which still
 needs to pass admission. See [Submitting](competing/submitting.md) for session
-usage and error handling.
+usage and error handling, and [Models and versions](competing/models.md) for why
+the two calls are separate.
 
 ## 5. Watch the trial
 
-Read `GET /v1/models/{model_id}`. Its `phase` distinguishes waiting for verification
+Read `GET /v1/versions/{version_id}`. Its `phase` distinguishes waiting for verification
 from waiting for a trial. If admission succeeds, status becomes `verified`, then
 `active` after a successful trial. **Losing the trial is fine**; forfeiting it is
 not. The trial checks playability and never changes ratings.
 
 A rejection includes `reject_reason`. Fix the named issue, validate again, and
 publish a new release. If the version is waiting, inspect its phase and trial
-status before attempting another submission: only one candidate per owner and
-game may be in flight.
+status before attempting another submission to the same model: one candidate per
+model may be in flight. Another of your models can be submitted to meanwhile.
 
 ## Where to go next
 
 Read [matches](competing/matches.md), [replays](competing/replays.md), and
 [ranking](competing/ranking.md) to understand your first results. Improve one
 behavior at a time and enter another version while the submission window remains
-open. Your active version stays in competition while its replacement is tested.
+open. A model's active version stays in competition while its replacement is
+tested, and your other models keep playing throughout.
 
 
 > **Replay visualiser — planned:** Follow one admitted entry through its trial, highlighting the first food collection, a fight, and the final result. Show the candidate’s view alongside the full replay.

@@ -11,6 +11,9 @@ entering rather than from this page.** The API returns them on every season it
 reports — `GET /v1/games/{game}` and `GET /v1/games/{game}/seasons` both carry a
 `weight_classes` table — and the site shows them on the home page and beside your
 entry. A season may also offer only some of the classes: a focused season might run
+Nano alone, and a model measuring into a class it is not running is rejected
+`CLASS_NOT_OFFERED` — which is not the same refusal as being too large for every
+class there is. A focused season might run
 Nano alone.
 
 These are the limits the platform started with, and the default a new season

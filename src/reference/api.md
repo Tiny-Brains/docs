@@ -54,19 +54,30 @@ A season entry includes `number`, `state`, `submissions_open_at`,
 `submissions_close_at`, `closed_at`, `close_requested_at`, `engine_digest`, and
 `rules`. See [Seasons](../competing/seasons.md).
 
-## Versions and matches
+## Models, versions and matches
+
+A model is addressed by the repository it publishes from; a version by its UUID.
+See [Models and versions](../competing/models.md) for why.
 
 | Method | Path | Authentication | Parameters |
 |---|---|---|---|
-| GET | `/v1/models` | Session | Optional `game` query; returns caller's versions |
-| GET | `/v1/models/{id}` | Public | Model UUID |
-| GET | `/v1/matches` | Public | Required `model` UUID; optional `limit`, default 25 |
+| POST | `/v1/games/{game}/models` | Session | Body `{name, url}` |
+| GET | `/v1/games/{game}/models` | Public | Optional `owner`, or `mine=1` with a session |
+| GET | `/v1/games/{game}/models/{owner}/{repo}` | Public | The repository path |
+| PATCH | `/v1/games/{game}/models/{owner}/{repo}` | Session, owner | Body `{name?, retired?}` |
+| GET | `/v1/versions/{id}` | Public | Version UUID |
+| GET | `/v1/models` | Session | Optional `game` query; the caller's models |
+| GET | `/v1/matches` | Public | `model` (every version of one) or `version` (one); optional `limit`, default 25 |
 | GET | `/v1/matches/{id}` | Public | Match UUID |
 
-A version detail reports its owner, game, version, release metadata, class, size,
-parameter count, measured inference time, hashes, evaluator identity, season, status,
-phase, admission attempt, successor, rejection reason, latest trial, and ratings.
-Many fields are null before admission produces them. `ratings` is keyed by ladder.
+A model detail reports its name, repository, owner, whether it is retired, and
+every version of it newest first.
+
+A version detail reports its model, owner, game, version number, release metadata,
+class, size, parameter count, measured inference time, hashes, evaluator identity,
+season, status, phase, admission attempt, successor, rejection reason, latest
+trial, and ratings. Many fields are null before admission produces them.
+`ratings` is keyed by ladder. `successor` is **the same model's** next version.
 
 Match history is an array of **finished and rated matches only**, newest played
 first, with the requested model's rank and score. There is no history cursor in
@@ -90,29 +101,36 @@ that every unknown UUID receives a structured not-found error.
 ```json
 {
   "game": "ants",
-  "repo": "OWNER/REPO",
+  "model": "OWNER/REPO",
   "release_tag": "TAG",
   "weights_hash": "sha256:<64 hex digits>",
   "adapter_hash": "sha256:<64 hex digits>"
 }
 ```
 
+`model` names an existing model of yours, as its repository path or its
+`model_id`. A repository with no model behind it is `404 unknown_model`: a
+submission never creates one.
+
 Replace the illustrative values with your release and actual hashes. The response
-is `201` with `model_id`, `version`, `status`, `season`, and both hashes. It records
-a testing version rather than accepting the entry directly onto the ladder.
+is `201` with `version_id`, `model_id`, `model`, `repo`, `version`, `status`,
+`season`, and both hashes. It records a testing version rather than accepting the
+entry directly onto the ladder.
 See [Submitting a version](../competing/submitting.md) for a session-based example.
 
 ## Errors and rate limits
 
 Handle the HTTP status before interpreting a success body. Request refusals
-include `400` for missing hashes, `401` for invalid sessions, and `409` for season,
-eligibility, duplicate-release, or in-flight candidate conflicts. Error details
+include `400` for missing hashes or a malformed repository, `401` for invalid
+sessions, `404` for a model you do not have, and `409` for season, eligibility,
+quota, cooldown, duplicate-release or in-flight candidate conflicts. Error details
 can vary by whether Soma or the underlying runtime produced the response.
 The [rejection reference](rejection-reasons.md) separates request errors from
 later version verdicts.
 
 The submission route declares 1 request/second with burst 5 per signed-in user.
 `/me`, `/models`, and session deletion declare 10 requests/second with burst 20.
+Model creation and editing declare 1 request/second with burst 5, as submission does.
 Back off on `429`; when a response provides retry timing, respect it. No daily
 submission allowance is declared by these channels. Public-route or deployment
 limits may apply separately; use modest polling instead of a tight loop.

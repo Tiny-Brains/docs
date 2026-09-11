@@ -46,8 +46,8 @@ stays in place under the game rules.
 
 | Setting | Current value |
 |---|---:|
-| In-flight candidate slots | 1 per owner and game, covering testing and verified |
-| Duplicate release | Disallowed per owner/game/season/repository/tag |
+| In-flight candidate slots | 1 per model, covering testing and verified; a season may also cap the total across your models |
+| Duplicate release | Disallowed per model, season and tag — the repository is the model's |
 | Admission polling interval | 20 seconds |
 | Admission batch | Up to 4 candidates per run |
 | Verification claim timeout | 180 seconds |
@@ -56,7 +56,30 @@ stays in place under the game rules.
 | Trial repair limit | 3 trial rows |
 | Submission endpoint rate | 1 request/second, burst 5, per authenticated principal |
 
-A rate limit does not override the one-candidate or duplicate-release rules. The
+## Season quotas
+
+These have no platform-wide value. Each is absent unless the season declares it,
+and absent means no limit — so the table below is what a season *may* set, not
+what any season does. `GET /v1/games/{game}/submission` reports your standing
+against every one of them, before you make a request.
+
+| Rule | What it caps |
+|---|---|
+| `entries.max_per_user` | how many models you may hold in the season |
+| `entries.max_per_class` | how many of them may sit in one weight class |
+| `entries.in_flight_max` | how many of your versions may be in admission at once |
+| `entries.versions_max_per_model` | releases one model may enter |
+| `entries.versions_max_per_user` | releases you may enter across every model |
+| `entries.cooldown_s` | the gap between one model's submissions |
+| `classes.allow` | which weight classes may be entered at all |
+| `graph.dtypes` | which element types the weights may be stored in — a quantised-only season |
+| `graph.params_max` | a parameter ceiling, independent of the byte cap |
+| `graph.opset_min` / `opset_max` | the ONNX opset window |
+| `graph.op_allowlist` | the operator set, narrowing the platform's |
+| `repo.allow_orgs` | organisations whose repositories count as yours |
+| `unique_weights.scope` | whether two entries may stand on the same weights |
+
+A rate limit does not override the one-candidate-per-model or duplicate-release rules, nor any quota the season declares. The
 admission timeout is not a guarantee of total turnaround time, and its validation
 deadline is longer than the actual turn deadline.
 

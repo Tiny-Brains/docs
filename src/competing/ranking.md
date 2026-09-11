@@ -58,7 +58,8 @@ uncertainty merely because wall-clock time passes.
 ## Ratings after a new version
 
 A successful successor inherits the predecessor's mean on shared ladders within
-the same season. Its uncertainty is doubled, capped at the initial prior, so
+the same season, where the predecessor is **the same model's** previous active
+version. Your models are separate lineages and inherit nothing from each other. Its uncertainty is doubled, capped at the initial prior, so
 new evidence is required. The initial displayed value can therefore fall even
 though the inherited mean stays the same.
 
