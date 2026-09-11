@@ -21,9 +21,10 @@ it — a match between two of yours would move rating between them for free. A
 season may also cap how much of the queue one competitor's models can hold at
 once, so a large portfolio does not crowd out a small one.
 
-Baselines are platform-provided model entries used as opponents and rating
-reference points. They run through the same model and game interfaces; there is
-no special “beat the baseline” admission requirement.
+Baselines are platform-provided entries, marked with a baseline tag. They are
+paired, rated and ranked like any other entry, and settle the same way; the one
+thing only they do is play every candidate's [trial](trial.md). There is no
+special “beat the baseline” admission requirement.
 
 ## Match states
 

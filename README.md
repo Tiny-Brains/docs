@@ -212,6 +212,10 @@ site's components without an `!important` in sight.
 
 ## Status
 
+**11 September 2026 — a baseline is described as an entry.** `competing/matches.md` and the
+glossary say what the platform now does: a baseline is paired, rated and settled like any entry,
+carries a tag, and is the opponent in every trial.
+
 **10 September 2026 — the book builds from artifact images, and the build is RED.** Nothing
 generated is committed: `src/viz/`, `src/tutorials/`, `tutorials/boards/*.json` and the scenario
 replays are gitignored, and `Dockerfile` rebuilds them — the viewer from the cartridge's artifact

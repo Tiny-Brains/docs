@@ -7,7 +7,7 @@
 | Adapter | Submitted declarative programs mapping observation JSON to tensors and outputs to actions |
 | Admission | Static and reference-case checks before a candidate is verified |
 | Axon | Service that loads ONNX models and evaluates adapters |
-| Baseline | Platform-provided model opponent used to populate and anchor the field |
+| Baseline | Platform-provided entry, tagged as a baseline; paired and rated like any other, and the opponent in every trial |
 | Candidate | A submitted version still testing or awaiting its trial verdict |
 | Cartridge | A game's rules, observations, scoring, generation, and replay reconstruction in a WebAssembly component |
 | Class | A model's assigned compressed-size category: Nano, Micro, Mini, Small, or Large |
