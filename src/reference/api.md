@@ -48,7 +48,10 @@ curl --fail-with-body -sS   'http://localhost:5173/v1/games/ants/leaderboard?lad
 
 The body has `season`, `closed`, `entries`, and `next_cursor`. Each entry includes
 `rank`, `model_id`, `owner`, `version`, `class`, `size_bytes`, `rating`,
-`provisional`, and `matches`.
+`provisional`, `matches`, `trend` (how much the rating moved on the last counted
+match, or null before the first), and `history` (the last twelve ratings on this
+ladder, oldest first, the seed at promotion included, rounded to two places —
+enough for a sparkline; a version's full chain is not a public route).
 
 A season entry includes `number`, `state`, `submissions_open_at`,
 `submissions_close_at`, `closed_at`, `close_requested_at`, `engine_digest`, and
