@@ -76,7 +76,7 @@ against every one of them, before you make a request.
 | `graph.params_max` | a parameter ceiling, independent of the byte cap |
 | `graph.opset_min` / `opset_max` | the ONNX opset window |
 | `graph.op_allowlist` | the operator set, narrowing the platform's |
-| `repo.allow_orgs` | organisations whose repositories count as yours |
+| `repo.allow_orgs` | organisations whose repositories count as yours — only for accounts the season also lists as participants |
 | `unique_weights.scope` | whether two entries may stand on the same weights |
 
 A rate limit does not override the one-candidate-per-model or duplicate-release rules, nor any quota the season declares. The

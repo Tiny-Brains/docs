@@ -23,8 +23,10 @@ These occur before a new version is successfully recorded.
 | `cooling_down` | The season asks for a gap between one model's submissions | The response carries the instant you may try again |
 | `entries_max` | You hold as many models as the season allows | Retire one to free a slot |
 | `repo_invalid` | The URL does not name exactly one repository | Give `owner/name`, or the repository's own page |
-| `repo_not_owned` | The repository is not in your account | Use one you own, or an organisation the season allows |
-| `repo_taken` | You already have a model on that repository | One repository is one model; submit a release to it |
+| `repo_unverified` | GitHub did not confirm who owns the repository — it may not exist, or we are briefly rate-limited | Check the spelling; if it is right, try again shortly |
+| `repo_private` | The repository is private, and release assets are fetched without a token | Make it public, or publish from one that is |
+| `repo_not_owned` | GitHub says the repository belongs to a different account | Use one your signed-in account owns, or an organisation the season allows |
+| `repo_taken` | That repository already has a model on it | One repository is one model, platform-wide; submit a release to it |
 | `model_name_taken` | You already have a model with that name | Names are how yours are told apart |
 | `401` / `session_revoked` | Session absent, invalid, expired, or revoked | Sign in again |
 

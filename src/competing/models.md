@@ -22,12 +22,17 @@ is why its page has a readable address:
 /ants/models/alice/ants-brain/v3       one version of it
 ```
 
-Two consequences follow, and both are deliberate:
+Three consequences follow, and all three are deliberate:
 
-- **The repository must be one you own.** The first path segment has to match your
-  GitHub login, so nobody can enter a repository that is not theirs. A season may
-  additionally allow named organisations, which is how a lab or a class enters from
-  a shared account.
+- **The repository must be one you own, and GitHub is asked.** When you create the
+  model the platform calls `GET /repos/{owner}/{name}` and compares the account id
+  it reports against the account you signed in with. It compares ids and not
+  logins, so renaming yourself on GitHub neither costs you the models you have nor
+  hands anyone the ones you left behind. A season may additionally allow named
+  organisations, which is how a lab or a class enters from a shared account — that
+  allowance only applies to accounts the season lists as participants.
+- **One repository is one model, platform-wide.** Not one per competitor: the
+  repository is the key, and the first model created on it holds it.
 - **The repository cannot be changed afterwards.** A model that could move to
   another repository would be a different entry wearing this one's ratings and its
   whole match history. Its *name* is a label and is yours to edit.
@@ -46,6 +51,13 @@ await fetch('/v1/games/ants/models', {
 `url` may be a browser URL, an ssh remote, or a bare `owner/name`; they normalise
 to the same stored path. A releases or tree URL is refused `repo_invalid`, because
 it names a page inside a repository rather than the repository.
+
+**The repository has to exist and be public when you create the model.** Your
+release assets are fetched without a token, so a private repository can never be
+admitted from; it is refused `repo_private` here rather than discovered at your
+first submission. If GitHub does not answer at all the creation is refused
+`repo_unverified` — a 503, not a verdict about you. Check the spelling, and if it
+is right, try again shortly.
 
 **Creating a model enters nothing.** It starts no clock, costs no attempt, and
 puts nothing on a ladder. [Submitting a version](submitting.md) is what does that.
