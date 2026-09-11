@@ -252,6 +252,10 @@ site's components without an `!important` in sight.
 
 ## Status
 
+**11 September 2026 — a leaderboard entry's `trend` and `history` are in the API reference.**
+Soma has carried `trend` since the entry split and gains `history` today, the last twelve ratings
+on the ladder for the site's sparkline; neither was in `reference/api.md`'s field list.
+
 **11 September 2026 — the adapter chapter explains the adapter, and every example opens in
 DataLogic Studio.** Two new pages: *A real adapter, piece by piece* reads the baselines' adapter
 plane by plane, both programs, with its measured cost; *Seeing it in DataLogic Studio* says how to
