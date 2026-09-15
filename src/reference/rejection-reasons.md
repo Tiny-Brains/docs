@@ -1,8 +1,8 @@
 # Rejection reasons
 
-Start with the version's `reject_reason` from `GET /v1/models/{id}`. A submission
-request refusal, an admission rejection, a trial failure, and a failed match are
-different events; use the stage to decide what to do next.
+Start with the version's `reject_reason` from `GET /v1/versions/{id}`. A submission request
+refusal, an admission rejection, a trial failure, and a failed match are different events; use the
+stage to decide what to do next.
 
 ## Request refusals
 
@@ -10,7 +10,7 @@ These occur before a new version is successfully recorded.
 
 | Error or condition | Meaning | Next step |
 |---|---|---|
-| `hashes_required` | Missing or obviously malformed declared hashes | Supply both `sha256:<64 hex>` values |
+| `hashes_required` | Missing or obviously malformed declared hashes | Supply both `weights_hash` and `manifest_hash` as `sha256:<64 hex>` |
 | `season_not_open` | No season accepting submissions | Read the season dates and wait for an open window |
 | `not_a_participant` | Account not admitted by the season's participant rule | Check eligibility with the organizer |
 | `weights_already_entered` | Another owner already holds these weights under the season's rule | Check the rule scope and submit an eligible entry |
@@ -37,38 +37,46 @@ mapping; do not depend on an invented `duplicate_release` error code.
 between two calls a second apart, because it is a function of the current time.
 That is why it reports the instant you may retry rather than a yes or no.
 
-## Release assets and graph
+## The upload, and what arrived
 
 | Reason | Meaning | Next step |
 |---|---|---|
-| `ASSET_MISSING` | Asset URL is unavailable to the loader, including private or missing release assets | Check public access, tag, and exact filenames |
-| `HASH_MISMATCH` | Downloaded bytes do not match declared SHA-256, or the hash is invalid | Hash the uploaded files again |
-| `TOO_LARGE` | Raw asset ceiling or maximum compressed class size exceeded | Measure both files and reduce the relevant size |
-| `GRAPH_INVALID` | ONNX cannot build a runnable session | Re-export and test the exact file in Axon |
+| `ARTIFACT_MISSING` | The graph is not in the bucket at your version's key | **You did not upload.** Submit the same tag again for fresh URLs and `PUT` both files |
+| `MANIFEST_MISSING` | The graph arrived and the manifest did not | The same fix, for the second file |
+| `MANIFEST_MISMATCH` | What was uploaded does not hash to `manifest_hash` | Re-run `shasum -a 256` on the file you actually sent |
+| `MANIFEST_INVALID` | The document carries no `inputs` or no `outputs` | It is not an `orion:model@1.0.0` manifest |
+| `RESULT_NOT_ALLOWED` | The manifest carries a `result` expression | The platform reads the head. Delete it — see [the manifest](../models/adapters.md#why-you-do-not-write-the-head) |
+| `DIGEST_FAILED` | The node re-hashed the graph and got something else | The same fix as `MANIFEST_MISMATCH`, for `model.onnx` |
+| `SIZE_FAILED` | The object is past the node's own ceiling, before any class is considered | Reduce the file |
+
+## Graph and policy
+
+| Reason | Meaning | Next step |
+|---|---|---|
+| `PARSE_FAILED` | The ONNX parses and no plan builds | Re-export. A graph that computes indices internally cannot declare named spatial axes — give it concrete ones |
+| `PROBE_FAILED` | It loads and will not run at your `probe_dims`, or takes longer than the node allows for five inferences | Check that the declared shapes are what the graph actually takes |
+| `TOO_LARGE` | `S'` — the two files' bytes — is past the largest class this season runs | Measure both files and reduce the larger |
 | `OPSET_UNSUPPORTED` | Opset outside deployed policy | Export within the supported range |
-| `OP_NOT_ALLOWED` | Graph uses an operator this season does not allow | Inspect the exported nodes and use supported operations |
+| `OP_NOT_ALLOWED` | Graph uses an operator this season does not allow | Inspect the exported nodes, including `If`/`Loop`/`Scan` bodies, and use supported operations |
 | `CLASS_NOT_OFFERED` | It measured into a weight class this season does not run | Reach a class the season offers — this is not the same as being too large |
 | `CLASS_FULL` | You already hold the season's limit of models in that class | Retire one in that class, or aim at another |
-| `PARAMS_EXCEEDED` | More parameters than this season allows | Reduce the parameter count, not only the bytes |
-| `DTYPE_NOT_ALLOWED` | The weights are stored in an element type this season does not accept | A quantised-only season lists `int8`; export with quantised weights, not merely quantised inputs |
+| `PARAMS_EXCEEDED` | More parameters than this season allows | Reduce the parameter count, not only the bytes. The count is every value the document carries, wherever it carries it |
 | `TOO_SLOW` | Slower than this season's inference ceiling | Rare: most seasons set none. Simplify the graph |
 
-A compute-cap failure does not automatically move the entry to a larger class.
-See [model format](../models/format.md) and [weight classes](../models/weight-classes.md).
+A slow graph does not automatically move to a larger class. See
+[model format](../models/format.md) and [weight classes](../models/weight-classes.md).
 
 ## Adapter and interface
 
 | Reason | Meaning | Next step |
 |---|---|---|
-| `ADAPTER_INVALID` | Invalid JSON/dialect/expression or invalid adapter result | Check required fields, supported operators, scopes, and output type |
-| `ADAPTER_OVER_BUDGET` | A validation direction exceeds its operation budget | Measure cases and reduce adapter work |
-| `SHAPE_MISMATCH` | Graph inputs or execution do not match what validation can run | Compare actual input names, dtypes, and shapes; inspect local validation detail |
+| `ADAPTER_INVALID` | An adapter did not produce a tensor the graph takes, or produced none for a declared input | Check operators, scopes, dtypes and shapes. A misspelt operator fails here, not at load |
+| `ADAPTER_OVER_BUDGET` | An adapter exceeds its operation budget on a reference observation | Measure cases and reduce the work — [the budget](../models/adapters/budget.md) |
 
-Local Axon `/validate` can return `ADAPTER_FAILED` with `over_budget: true`;
-admission maps that case to `ADAPTER_OVER_BUDGET`. The loader's response can
-include `detail` and `failing_case`. The current public version response exposes
-`reject_reason` but does not expose all of that loader detail. Reproduce with
-[local validation](../models/testing.md), or provide the model ID to the operator.
+`ADAPTER_OVER_BUDGET` and `ADAPTER_INVALID` are deliberately different words: "too expensive" and
+"wrong" must not read the same. The detail carries the failing case index. Reproduce both with
+[`tinybrains check`](../models/testing.md#check-it-the-way-admission-will), which measures what
+admission measures.
 
 ## Trials and administrative outcomes
 
@@ -82,11 +90,13 @@ include `detail` and `failing_case`. The current public version response exposes
 
 ## Platform-side retries
 
-Temporary `FETCH_FAILED`, `MEMORY`, `STORE_UNAVAILABLE`, loader unreachability,
-and incomplete registration can leave a candidate testing while admission retries.
+A storage failure, a node that cannot be reached, or a game whose registration is incomplete leaves
+a candidate `testing` while admission retries — and **does not spend one of your three attempts**.
 An eventual timeout does not establish that the neural network is invalid.
-`MANIFEST_INCOMPLETE` is an operator configuration problem, not an instruction to
-change the competitor's adapter.
+
+`ARTIFACT_MISSING` and `MANIFEST_MISSING` are **not** in this class, although they look like it.
+An empty bucket is your submission's state, not the platform's, and no amount of retrying makes
+bytes appear.
 
 A rejected candidate does not displace your active version. Once you understand
 the cause, publish a new release tag and hashes for the next attempt. Preserve

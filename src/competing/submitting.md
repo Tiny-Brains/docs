@@ -1,9 +1,13 @@
 # Submitting a version
 
-A submission identifies a public GitHub release containing your model and adapter,
-and says which of your [models](models.md) it is a version of. The API records a
-new version; [admission](admission.md) and an unrated [trial](trial.md) decide
-whether it becomes that model's active version.
+A submission declares the two files you are entering — by hash — and says which of your
+[models](models.md) it is a version of. The API records a new version and answers with **two
+one-shot upload URLs**; you `PUT` the files to them, and then [admission](admission.md) and an
+unrated [trial](trial.md) decide whether the version becomes that model's active one.
+
+**The platform stores no bytes of its own and downloads nothing from you.** That is why the upload
+step exists: there is no process on the platform with a fetch allowlist, because there is no
+process that fetches.
 
 Create the model first. A submission never creates one: a repository with no model
 behind it is refused `unknown_model` rather than adopted, because a typo in a
@@ -17,21 +21,20 @@ Attach these exact asset names to a release in a public repository:
 | Asset | Content |
 |---|---|
 | `model.onnx` | Self-contained ONNX model |
-| `adapter.json` | Adapter dialect declaration and both programs |
+| `manifest.json` | What your graph takes and returns, and one adapter per input |
 
-The platform constructs their download URLs from your repository and release tag.
-Do not supply a branch name, source archive, or arbitrary download URL instead.
-Ensure the assets are publicly downloadable without your GitHub session.
+**The release is the public record of what you entered, and the audit trail a reader follows.** The
+platform reads its *metadata* — the commit the tag points at — and never its assets. A release that
+is missing or private costs you nothing at admission, and is still required: a leaderboard entry
+nobody can audit is not an entry.
 
-Compute SHA-256 over each final file using `sha256sum model.onnx adapter.json`
-on Linux or `shasum -a 256 model.onnx adapter.json` on macOS. Prefix each digest
-with `sha256:` in the request. Whitespace changes in JSON change the hash too.
+Compute SHA-256 over each final file using `sha256sum model.onnx manifest.json` on Linux or
+`shasum -a 256 model.onnx manifest.json` on macOS. Prefix each digest with `sha256:` in the request.
+Whitespace changes in JSON change the hash too.
 
-The platform verifies and mirrors the admitted bytes. Later edits to a release
-do not update an admitted version. Publish a new tag for a new attempt: one model
-cannot enter the same tag twice in one season, even if the earlier version was
-rejected. The next season is a fresh start, and the same tag may be entered again
-there.
+Publish a new tag for a new attempt: one model cannot enter the same tag twice in one season, even
+if the earlier version was rejected. The next season is a fresh start, and the same tag may be
+entered again there.
 
 ## Make the call
 
@@ -53,7 +56,7 @@ const response = await fetch('/v1/submissions', {
     model: 'your-handle/your-repository',
     release_tag: 'v1',
     weights_hash: 'sha256:<64 hexadecimal digits>',
-    adapter_hash: 'sha256:<64 hexadecimal digits>'
+    manifest_hash: 'sha256:<64 hexadecimal digits>'
   })
 });
 const result = await response.json();
@@ -64,10 +67,39 @@ console.log(result);
 `model` names the model this release belongs to, either as its repository path or
 as the `model_id` the create call returned.
 
-The hashes must be actual 64-digit values; the placeholders intentionally are
-not valid. A successful response has status `201` and fields `version_id`,
-`model_id`, `model`, `repo`, `version`, `status`, `season`, `weights_hash`, and
-`adapter_hash`. Store the version ID to follow this exact version.
+The hashes must be actual 64-digit values; the placeholders intentionally are not valid. A
+successful response has status `201` and fields `version_id`, `model_id`, `model`, `repo`,
+`version`, `status`, `season`, `weights_hash`, `manifest_hash` — and **`upload`**. Store the version
+ID to follow this exact version.
+
+## Upload the two files
+
+```json
+"upload": {
+  "model_onnx":    "https://…/models/<version_id>/model.onnx?X-Amz-…",
+  "manifest_json": "https://…/models/<version_id>/manifest.json?X-Amz-…",
+  "expires_in": "30m"
+}
+```
+
+`PUT` each file to its URL with the file as the whole body. No headers, no credentials:
+
+```sh
+curl -T model.onnx    "$MODEL_URL"
+curl -T manifest.json "$MANIFEST_URL"
+```
+
+Both URLs are **one-shot and expire in thirty minutes**. Submitting the same release tag again mints
+fresh ones, so a link that expired is not a dead end.
+
+**Nothing happens until both files land.** A version whose bucket is empty is rejected
+`ARTIFACT_MISSING` or `MANIFEST_MISSING`, naming the key it looked under — which is the most likely
+mistake a first-time entrant makes, and it is recoverable by re-submitting the tag.
+
+**The platform re-hashes what arrives.** Anything whose SHA-256 is not what you declared is refused
+at admission with the hash it measured. That is what makes a signed upload URL safe to hand out, and
+it is why the declaration is checked twice: once by the node against the graph's digest, and once by
+the database against the manifest's.
 
 **Version numbers restart per model.** Your second model's first release is v1,
 not v4 — a lineage whose history began at 4 because you had an earlier model would

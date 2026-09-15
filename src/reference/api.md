@@ -107,7 +107,7 @@ that every unknown UUID receives a structured not-found error.
   "model": "OWNER/REPO",
   "release_tag": "TAG",
   "weights_hash": "sha256:<64 hex digits>",
-  "adapter_hash": "sha256:<64 hex digits>"
+  "manifest_hash": "sha256:<64 hex digits>"
 }
 ```
 

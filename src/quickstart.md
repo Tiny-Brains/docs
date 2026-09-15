@@ -24,40 +24,42 @@ Read [Ants](games/ants.md), then decide how to represent the
 planes for your ants, visible enemies, food, and known water and produce five
 move scores per ant or per board square.
 
-Train using the same information the arena supplies. Export to `model.onnx`,
-with named tensor inputs and outputs that your adapter can address. Check the
+Train using the same information the arena supplies. Export to `model.onnx`, with named tensor
+inputs and outputs that your manifest can name. Check the
 [model requirements](models/format.md) and [size classes](models/weight-classes.md)
 before committing to an architecture. Export success alone does not establish
 admission compatibility.
 
-## 2. Write the adapter
+## 2. Write the manifest
 
-Create `adapter.json` with `dialect`, `in`, and `out`. The input program builds
-the model's tensors; the output program returns one of `N`, `E`, `S`, `W`, or `-`
-for each ant, in observation order. See the complete small example in
-[Adapters](models/adapters.md), and [a real adapter, piece by piece](models/adapters/walkthrough.md)
-for one that plays.
+Create `manifest.json`: it declares each of your graph's inputs and outputs by name, dtype and
+shape, and carries one **adapter** per input — a small program that turns the observation into that
+tensor. A dimension may be a *name*, so one entry plays every board size.
 
-Run the pair through [local validation](models/testing.md). Exercise all three
-map sizes, empty lists, large colonies, and fragmented known-water masks. Check
-both operation counts and the actual actions, not only whether execution returns.
+**You do not write the output side.** The referee reads your policy head, in a channel order the
+game publishes ([why](models/adapters.md#why-you-do-not-write-the-head)). See the complete small
+example in [The manifest](models/adapters.md), and
+[a real manifest, piece by piece](models/adapters/walkthrough.md) for one that plays.
+
+Run the pair through [local checks](models/testing.md). Exercise all three map sizes, empty lists,
+large colonies, and fragmented known-water masks. Check the operation counts and the actual actions,
+not only whether execution returns.
 
 ## 3. Publish a GitHub release
 
-Attach the files under the exact names `model.onnx` and `adapter.json` to a public
-release. Compute SHA-256 hashes of those exact bytes:
+Attach the files under the exact names `model.onnx` and `manifest.json` to a public release, as the
+record of what you entered. Compute SHA-256 hashes of those exact bytes:
 
 ```sh
 # Linux
-sha256sum model.onnx adapter.json
+sha256sum model.onnx manifest.json
 
 # macOS
-shasum -a 256 model.onnx adapter.json
+shasum -a 256 model.onnx manifest.json
 ```
 
-Keep the files unchanged after hashing. The submission uses `sha256:` followed
-by each file's 64 hexadecimal digits. A GitHub source archive is not a substitute
-for the two attached assets.
+Keep the files unchanged after hashing. The submission uses `sha256:` followed by each file's 64
+hexadecimal digits.
 
 ## 4. Create the model, then submit to it
 
@@ -78,13 +80,21 @@ POST /v1/submissions
   "model": "your-handle/your-repository",
   "release_tag": "v1",
   "weights_hash": "sha256:<64 hex digits for model.onnx>",
-  "adapter_hash": "sha256:<64 hex digits for adapter.json>"
+  "manifest_hash": "sha256:<64 hex digits for manifest.json>"
 }
 ```
 
-Replace the illustrative hash values; they are not valid hashes. Save the
-returned `version_id`. A `201` response creates a `testing` version, which still
-needs to pass admission. See [Submitting](competing/submitting.md) for session
+Replace the illustrative hash values; they are not valid hashes. Save the returned `version_id`.
+
+**The `201` answers with two one-shot upload URLs**, and nothing happens until you use them:
+
+```sh
+curl -T model.onnx    "$MODEL_URL"       # upload.model_onnx
+curl -T manifest.json "$MANIFEST_URL"    # upload.manifest_json
+```
+
+The platform stores no bytes of its own and downloads nothing from you, so a version whose bucket is
+empty is rejected `ARTIFACT_MISSING`. It re-hashes what arrives against what you declared. See [Submitting](competing/submitting.md) for session
 usage and error handling, and [Models and versions](competing/models.md) for why
 the two calls are separate.
 

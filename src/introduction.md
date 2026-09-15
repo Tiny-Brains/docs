@@ -39,18 +39,20 @@ The prose above the slot stands alone: a page whose viewer fails to load still t
 A version has two parts, published together:
 
 - **`model.onnx`** — your trained neural network, exported in ONNX format.
-- **`adapter.json`** — a declarative program that converts the game's observations
-  into your model's input tensors, then converts its outputs into game actions.
+- **`manifest.json`** — what your graph takes and returns, and one declarative **adapter** per
+  input that converts the game's observation into that tensor.
 
 The game defines [what your model can see](models/observation.md) and
-[the actions it can take](models/actions.md). You choose the tensor representation
-and network architecture. The [adapter](models/adapters.md) connects those choices
-to the game using the platform's supported JSONLogic dialect and tensor operators.
+[the actions it can take](models/actions.md). You choose the tensor representation and network
+architecture. The [manifest](models/adapters.md) connects those choices to the game, in JSONLogic
+with tensor operators — the same expression engine the platform runs its own logic on. The action
+side is the referee's: it reads your policy head, so the channel order is a rule of the game rather
+than a program you write.
 
-Compactness includes both parts of your entry. Your weight class is determined
-by the compressed size of the model's initializer tensor data plus the compressed
-adapter. Adapter operation budgets and a turn deadline also apply,
-so an entry must be small enough for its class and efficient enough to play.
+Compactness includes both parts of your entry. **Your weight class is the two files' bytes, added
+together** — nothing is compressed, so no way of packing your weights into the file understates it.
+An operation budget and a turn deadline also apply, so an entry must be small enough for its class
+and efficient enough to play.
 See [model format](models/format.md), [weight classes](models/weight-classes.md),
 and [limits and budgets](reference/limits.md) for the requirements.
 
@@ -58,20 +60,18 @@ and [limits and budgets](reference/limits.md) for the requirements.
 
 1. **Choose a season.** Check the game's season rules, eligibility requirements,
    and submission window. Each submitted version belongs to one season.
-2. **Learn the game and build your entry.** Train your model, export it to ONNX,
-   and write the adapter in both directions.
-3. **Test before submitting.** Check that your adapter produces the expected
-   tensors and valid actions, stays within its operation budget, and works with
-   your model on the reference observations. Use a local platform stack to evaluate
-   its decisions; a standalone match runner is not yet supplied. See
+2. **Learn the game and build your entry.** Train your model, export it to ONNX, and write the
+   manifest that declares and feeds it.
+3. **Test before submitting.** The `tinybrains` CLI links the same two libraries a node links, so
+   it makes admission's measurements on your machine: the tensors your adapters build, what they
+   charge, whether the graph accepts them, and a whole match through the real engine. See
    [testing before you submit](models/testing.md).
-4. **Publish and submit.** Attach `model.onnx` and `adapter.json` to a public
-   GitHub release. Submit the repository, release tag, and SHA-256 hashes of both
-   assets as described in [submitting a version](competing/submitting.md).
-5. **Complete admission and the trial.** The platform checks the release assets,
-   model requirements, and adapter compatibility and budgets. A verified version
-   then plays an unrated trial. Passing makes it active and eligible for ranked
-   matches.
+4. **Publish, submit, upload.** Attach `model.onnx` and `manifest.json` to a public GitHub release,
+   submit the repository, tag and both hashes, and `PUT` the two files to the one-shot URLs the
+   submission answers with — see [submitting a version](competing/submitting.md).
+5. **Complete admission and the trial.** The platform re-hashes what you uploaded, reads the graph,
+   probes it, and runs your manifest over the game's reference observations. A verified version then
+   plays an unrated trial. Passing makes it active and eligible for ranked matches.
 6. **Review and improve.** Use your match results, replays, and rankings to find
    weaknesses. Submit a new version while the season's submission window is open.
 

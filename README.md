@@ -25,11 +25,12 @@ source and is not going to.
 
 **It does not**
 
-- Own a single value it documents. Presets and budgets come from [Ants](https://github.com/Tiny-Brains/ants)' `cartridge.json`, size boundaries from [Jodi](https://github.com/Tiny-Brains/jodi)'s admission judging, opsets and scheduling from [DevOps](https://github.com/Tiny-Brains/devops)' Orion templates, asset ceilings from [Axon](https://github.com/Tiny-Brains/axon)'s configuration.
+- Own a single value it documents. Presets and budgets come from [Ants](https://github.com/Tiny-Brains/ants)' `cartridge.json`, size boundaries and every quota from the **season's rules in the database**, judged by [Jodi](https://github.com/Tiny-Brains/jodi), and opsets, scheduling and the operation budget from [DevOps](https://github.com/Tiny-Brains/devops)' Orion templates.
 - Draw a replay or know a rule of one; Ants ships the viewer and this repository vendors it.
 - Evaluate an adapter. DataLogic Studio runs the JSON half of an example in the reader's browser,
-  with datalogic-rs; Axon is the only evaluator whose answer counts, and every cost the book quotes
-  comes from it, through `tinybrains check` and `tinybrains adapt`.
+  on datalogic-rs — which is now the *same* engine the arena uses, so the two agree about the
+  language and differ about objects, counting and tensors. Every cost the book quotes comes from
+  `tinybrains check` or `tinybrains adapt`, which link the node's own two libraries.
 - Serve itself; [Web](https://github.com/Tiny-Brains/web)'s nginx mounts the rendered book today, and its own host will serve it.
 - Hold the platform's design documents, decision log, or deployment design; those stay in the repository that owns the behaviour.
 
@@ -48,7 +49,7 @@ source and is not going to.
 | reads | Ants | its artifact image, `/artifacts/viz` | The viewer bundle, copied into `src/viz/` so the book builds offline |
 | calls | DevOps CLI | `tinybrains <spec>`, from its artifact image | Scripted lessons played through the real cartridge into replay envelopes |
 | copies | Web | `web/public/design-system/tokens.css` | The palette, to the digit |
-| restates | Ants, Jodi, DevOps, Axon | Their configuration | Every number on the limits, weight-class and format pages |
+| restates | Ants, Jodi, DevOps, the season | Their configuration | Every number on the limits, weight-class and format pages |
 | read by | Web's nginx, or the book's own host | Static HTTP | The rendered `book/` |
 | links to, embeds | DataLogic Studio | `goplasmatic.github.io/datalogic-rs/` | Every adapter example as a playground link; the embed bundle `theme/tb-studio.js` mounts in a page |
 
@@ -212,11 +213,11 @@ site's components without an `!important` in sight.
   and data, so one pasted beside an example is a second copy that drifts the first time either is
   edited. The page holds a `{{#studio}}` directive; the build writes the code and the link from one
   file.
-- **The Studio is not the referee.** It runs datalogic-rs, which agrees with Axon on the JSON half
-  but for `null` equality, has operators the dialect lacks, shows `tb.*` calls without running them,
-  and counts nothing. Every page that links to it can say so without the reader leaving the book,
-  and every claim about what the arena does — a cost, a tensor, a trap — is checked with
-  `tinybrains adapt` or `tinybrains check`, which run Axon's own evaluator.
+- **The Studio is not the referee**, although it is now the same engine. What differs is objects
+  (it treats a multi-key one as a literal; the arena refuses one), the operation count, and tensors,
+  which it shows unevaluated. Every page that links to it can say so without the reader leaving the
+  book, and every claim about what the arena does — a cost, a tensor, a trap — is checked with
+  `tinybrains adapt` or `tinybrains check`, which link the node's own two libraries.
 - **The numbers belong to whoever computes them.** `src/reference/limits.md` dates its snapshot and
   names each owner. Verify against the current producer before changing a value here.
 - **The palette is the application's, to the digit.** `theme/tokens.css` is a copy; a colour
@@ -255,6 +256,23 @@ site's components without an `!important` in sight.
 **11 September 2026 — a leaderboard entry's `trend` and `history` are in the API reference.**
 Soma has carried `trend` since the entry split and gains `history` today, the last twelve ratings
 on the ladder for the site's sparkline; neither was in `reference/api.md`'s field list.
+
+**15 September 2026 — the book is on the manifest contract, and nothing in it names a service that
+no longer exists.** `adapter.json` is `manifest.json`, the `tb.*` dialect is datalogic's own tensor
+operators, and the `out` program is gone: the referee reads the policy head, so
+*What your model answers* is now a contract about an output tensor rather than about a program the
+entrant writes. The size metric is the two files' bytes and every class cap doubled with it. A
+dimension may be a name, so the padding advice went. The observation carries `vis`. Submitting has
+a fourth step — **upload**, to two one-shot presigned URLs — because the platform stores no bytes of
+its own and downloads nothing from a competitor.
+
+Three things were measured rather than assumed, with `tinybrains adapt` against the real evaluator,
+and two of them corrected what this book used to say: **`{"==": [0, null]}` is `true` in the arena**
+(it was `false` under the old dialect, and the Studio's disagreement was the book's most-repeated
+caveat); **an object literal does not exist** — every object is an operation, a multi-key one is an
+error, and an unknown key fails at evaluation rather than at load, which is why the `reduce`
+examples now carry arrays; and the baselines' adapter costs 86,051 operations at 64×96 and 229,415
+at 128×128, which is the table on the budget page.
 
 **11 September 2026 — the adapter chapter explains the adapter, and every example opens in
 DataLogic Studio.** Two new pages: *A real adapter, piece by piece* reads the baselines' adapter
@@ -321,4 +339,4 @@ would fill the two blocked slots, and a clone-and-build check from a fresh direc
 
 - Local references: [`src/SUMMARY.md`](src/SUMMARY.md) (the chapter order), [`tutorials/README.md`](tutorials/README.md) (how to write a lesson), [`book.toml`](book.toml) (the wiring, with the reasoning in comments).
 - The platform section — [architecture](src/platform/architecture.md), [the repositories](src/platform/repositories.md), [running locally](src/platform/running-locally.md), [adding a game](src/platform/adding-a-game.md), [contributing](src/platform/contributing.md) — is the orientation for someone new to the codebase.
-- Related repositories: [Ants](https://github.com/Tiny-Brains/ants), [Web](https://github.com/Tiny-Brains/web), [DevOps](https://github.com/Tiny-Brains/devops), [Soma](https://github.com/Tiny-Brains/soma), [Jodi](https://github.com/Tiny-Brains/jodi), [Kalam](https://github.com/Tiny-Brains/kalam), [Axon](https://github.com/Tiny-Brains/axon), [Drill](https://github.com/Tiny-Brains/drill).
+- Related repositories: [Ants](https://github.com/Tiny-Brains/ants), [Web](https://github.com/Tiny-Brains/web), [DevOps](https://github.com/Tiny-Brains/devops), [Soma](https://github.com/Tiny-Brains/soma), [Jodi](https://github.com/Tiny-Brains/jodi), [Kalam](https://github.com/Tiny-Brains/kalam), [Drill](https://github.com/Tiny-Brains/drill).

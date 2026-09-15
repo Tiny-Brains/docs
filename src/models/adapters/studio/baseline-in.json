@@ -2,171 +2,163 @@
   "about": "an illustrative observation: three ants, a foe, a food, both hills, three cells of water",
   "templating": true,
   "logic": {
-    "board": {
-      "tb.reshape": [
-        {
-          "tb.stack": [
-            [
-              {
-                "tb.scatter": [
-                  {
-                    "var": "mine"
-                  },
-                  {
-                    "var": "size"
-                  },
-                  "int8"
-                ]
-              },
-              {
-                "tb.scatter": [
-                  {
-                    "map": [
-                      {
-                        "var": "foes"
-                      },
-                      [
-                        {
-                          "var": "0"
-                        },
-                        {
-                          "var": "1"
-                        }
-                      ]
-                    ]
-                  },
-                  {
-                    "var": "size"
-                  },
-                  "int8"
-                ]
-              },
-              {
-                "tb.scatter": [
-                  {
-                    "var": "food"
-                  },
-                  {
-                    "var": "size"
-                  },
-                  "int8"
-                ]
-              },
-              {
-                "tb.rle_expand": [
-                  {
-                    "var": "water.rle"
-                  },
-                  {
-                    "var": "size"
-                  },
-                  "int8"
-                ]
-              },
-              {
-                "tb.scatter": [
-                  {
-                    "map": [
-                      {
-                        "filter": [
-                          {
-                            "var": "hills"
-                          },
-                          {
-                            "==": [
-                              {
-                                "var": "2"
-                              },
-                              0
-                            ]
-                          }
-                        ]
-                      },
-                      [
-                        {
-                          "var": "0"
-                        },
-                        {
-                          "var": "1"
-                        }
-                      ]
-                    ]
-                  },
-                  {
-                    "var": "size"
-                  },
-                  "int8"
-                ]
-              },
-              {
-                "tb.scatter": [
-                  {
-                    "map": [
-                      {
-                        "filter": [
-                          {
-                            "var": "hills"
-                          },
-                          {
-                            "!=": [
-                              {
-                                "var": "2"
-                              },
-                              0
-                            ]
-                          }
-                        ]
-                      },
-                      [
-                        {
-                          "var": "0"
-                        },
-                        {
-                          "var": "1"
-                        }
-                      ]
-                    ]
-                  },
-                  {
-                    "var": "size"
-                  },
-                  "int8"
-                ]
-              },
-              {
-                "tb.dilate": [
-                  {
-                    "tb.scatter": [
-                      {
-                        "var": "mine"
-                      },
-                      {
-                        "var": "size"
-                      },
-                      "int8"
-                    ]
-                  },
-                  77
-                ]
-              }
-            ],
-            0,
-            "int8"
-          ]
-        },
-        {
-          "merge": [
-            [
-              1,
-              7
-            ],
+    "reshape": [
+      {
+        "stack": [
+          [
             {
-              "var": "size"
+              "scatter": [
+                {
+                  "var": "mine"
+                },
+                {
+                  "var": "size"
+                },
+                "i8"
+              ]
+            },
+            {
+              "scatter": [
+                {
+                  "map": [
+                    {
+                      "var": "foes"
+                    },
+                    [
+                      {
+                        "var": "0"
+                      },
+                      {
+                        "var": "1"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "var": "size"
+                },
+                "i8"
+              ]
+            },
+            {
+              "scatter": [
+                {
+                  "var": "food"
+                },
+                {
+                  "var": "size"
+                },
+                "i8"
+              ]
+            },
+            {
+              "rle_expand": [
+                {
+                  "var": "water.rle"
+                },
+                {
+                  "var": "size"
+                },
+                "i8"
+              ]
+            },
+            {
+              "scatter": [
+                {
+                  "map": [
+                    {
+                      "filter": [
+                        {
+                          "var": "hills"
+                        },
+                        {
+                          "==": [
+                            {
+                              "var": "2"
+                            },
+                            0
+                          ]
+                        }
+                      ]
+                    },
+                    [
+                      {
+                        "var": "0"
+                      },
+                      {
+                        "var": "1"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "var": "size"
+                },
+                "i8"
+              ]
+            },
+            {
+              "scatter": [
+                {
+                  "map": [
+                    {
+                      "filter": [
+                        {
+                          "var": "hills"
+                        },
+                        {
+                          "!=": [
+                            {
+                              "var": "2"
+                            },
+                            0
+                          ]
+                        }
+                      ]
+                    },
+                    [
+                      {
+                        "var": "0"
+                      },
+                      {
+                        "var": "1"
+                      }
+                    ]
+                  ]
+                },
+                {
+                  "var": "size"
+                },
+                "i8"
+              ]
+            },
+            {
+              "rle_expand": [
+                {
+                  "var": "vis.rle"
+                },
+                {
+                  "var": "size"
+                },
+                "i8"
+              ]
             }
-          ]
-        }
-      ]
-    }
+          ],
+          0
+        ]
+      },
+      {
+        "merge": [
+          [
+            1,
+            7
+          ],
+          {
+            "var": "size"
+          }
+        ]
+      }
+    ]
   },
   "data": {
     "size": [
@@ -220,6 +212,16 @@
         3,
         0,
         4891
+      ]
+    },
+    "vis": {
+      "rle": [
+        0,
+        1054,
+        1,
+        11,
+        0,
+        5079
       ]
     }
   }

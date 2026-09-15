@@ -12,9 +12,10 @@
 // every example opens: the page and the link cannot show two different Studios. It is five
 // megabytes, so it is fetched only on a page that has a slot, and only once a slot scrolls near.
 //
-// NOTHING HERE IS THE REFEREE. The Studio evaluates with datalogic-rs and the ladder with Axon. The
-// JSON half agrees, the tensor half is shown and not run, and models/adapters/studio.md lists where
-// the two differ. The prose around every slot has to stand without it.
+// NOTHING HERE IS THE REFEREE, although it is now the same ENGINE: the ladder evaluates an adapter
+// with datalogic-rs too. What still differs is objects (the Studio treats a multi-key one as a
+// literal and a node refuses one), the operation count, and tensors, which are shown and not run.
+// models/adapters/studio.md lists it. The prose around every slot has to stand without it.
 (function () {
   "use strict";
 

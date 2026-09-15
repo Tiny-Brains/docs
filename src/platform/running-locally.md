@@ -14,17 +14,20 @@ tinybrains/
   soma/
   jodi/
   kalam/
-  axon/
   ants/
   web/
   devops/
 ```
 
-Compose builds images and mounts packages from these paths, so a DevOps-only
-checkout is insufficient. The stack uses the pinned Orion 1.7.0 runtime,
-Postgres 16, Redis, MinIO, Axon, and the browser application. Python 3 is needed
-for supplementary SQL checks; host Rust is not required just to load the committed
-game component.
+Every package now ships as an **artifact image** that Compose copies into a volume, so
+`docker compose up` needs **no checkout of any of them** — the sibling directories above are only
+where those images are built from by default, and `<PKG>_REF` pins a published tag instead. Add
+`-f docker-compose.dev.yml` to bind a checkout back over its volume when you want to edit a package
+in place.
+
+The stack uses the pinned Orion **1.8.1** runtime, Postgres 16, Redis, MinIO, and the browser
+application. **There is no inference sidecar**: each node runs models itself. Python 3 is needed for
+supplementary SQL checks; host Rust is not required.
 
 ## Configure the stack
 
@@ -64,9 +67,9 @@ Open `http://localhost:5173`, or verify the proxy:
 curl --fail --silent --show-error http://localhost:5173/v1/games
 ```
 
-Local host ports include Soma at 8080, the first Kalam at 8082, admission Axon at
-9091, Web at 5173, and MinIO at 9000/9001. They bind to loopback. For application
-requests and sign-in, use the browser origin consistently.
+Local host ports include Soma at 8080, the first Kalam at 8082, Web at 5173, and MinIO at
+9000/9001. They bind to loopback. For application requests and sign-in, use the browser origin
+consistently.
 
 ## Sign in and make a match happen
 
@@ -114,10 +117,12 @@ is guarded repair tooling, not a production migration mechanism.
 | Symptom | Check |
 |---|---|
 | Sign-in loops or returns unauthenticated | Browser origin, OAuth callback, cookie policy, and session secret |
-| Candidate stays testing | Admission loader, public asset access, registered reference observations, admission clock |
+| Candidate stays testing | Whether both objects are actually in the models bucket, registered reference observations, the admission clock |
+| Rejected `ARTIFACT_MISSING` | The upload step. Nothing fetches from a release — the competitor PUTs to a presigned URL |
 | Candidate stays verified | Latest trial status, available opponent, pairing clock |
-| Pending matches never run | Loaded `tb-wave` channel and engine; queued engine digest matches worker digest |
-| Models cannot load | Shared bucket, actual assets, store credentials, residency capacity |
+| Pending matches never run | Loaded `tb-match-N` channels and engine; queued engine digest matches the replica's |
+| Every match is released without playing | The replica's `tb-roster` clock, and whether its node has the seat's model `active`. `model_prefix` must agree across both templates |
+| Models cannot load | The bucket's TWO endpoints — an upload is signed for the public one and a node dials the internal one — plus store credentials |
 | Matches play but cannot finish | Replay bucket, upload connectivity, current claim and lease |
 | Results exist but ratings do not move | Counting clock; confirm the match is not an unrated trial |
 

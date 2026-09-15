@@ -1,8 +1,8 @@
 # What your model sees
 
-The Ants observation is a JSON object for one colony on one turn. Your adapter's
-`in` program receives this object directly. There is no setup message or terminal
-observation; when a seat stops playing, its model stops receiving calls.
+The Ants observation is a JSON object for one colony on one turn. Every adapter in your
+[manifest](adapters.md) receives this object directly, as its whole document. There is no setup
+message or terminal observation; when a seat stops playing, its model stops receiving calls.
 
 ## Fields
 
@@ -14,6 +14,7 @@ observation; when a seat stops playing, its model stops receiving calls.
 | `food` | `[[row, column], …]` | Currently visible food |
 | `hills` | `[[row, column, owner], …]` | Currently visible standing hills |
 | `water.rle` | `[value, count, value, count, …]` | Row-major known-water mask |
+| `vis.rle` | `[value, count, value, count, …]` | Row-major mask of what you can see **this turn** |
 
 Coordinates are zero-based and wrap as described in [The world](../games/ants/world.md).
 Empty lists are valid. Do not treat a list index as a permanent ant identity:
@@ -46,14 +47,31 @@ even when no ant currently sees it.
 
 For a small encoding example, `size: [2, 3]` and `rle: [0, 2, 1, 1, 0, 3]`
 expand to `[[0, 0, 1], [0, 0, 0]]`. This illustrates the encoding, not a supported
-map preset. Use `tb.rle_expand` to build the tensor without a JSON loop over cells.
+map preset. Use `rle_expand` to build the tensor without a JSON loop over cells.
+
+## What you can see this turn
+
+`vis` is the mask the engine filtered this observation through: a 1 at every cell within squared
+radius 77 of one of your ants, wrapped, and a 0 everywhere else. It is the same RLE encoding as
+`water`, so `rle_expand` builds the plane.
+
+**It is the difference between "there is nothing here" and "I cannot see here".** A 0 in the enemy
+plane where `vis` is 1 means the square is empty; a 0 where `vis` is 0 means you do not know. Almost
+every useful encoder wants that distinction, and without it a network learns "no enemy" from cells
+it could not have seen.
+
+> `vis` was removed from this protocol and put back on 14 September 2026. The removal argument was
+> that it is derivable from `mine` and a constant — true for a trainer, which builds the disk union
+> in four lines of numpy, and **false for the expression language an adapter is written in**, which
+> cannot address an enclosing iterator's element and so cannot union a disk per ant. The engine
+> computes the mask twice a turn anyway. If you trained against an older cartridge, your encoder
+> derived this plane and now receives it; check that the two agree before you rely on the new one.
 
 ## What is hidden
 
 Enemies, food, and hills are filtered to current vision. Only known water has
 memory. The payload supplies no scores, turn number, hive count, explored mask,
-or persistent model state. You can derive the current visibility mask by dilating
-your ant positions with squared radius 77 and wrapped geometry.
+or persistent model state.
 
 A model call is a function of one observation. Recurrent outputs are not fed back
 on the next turn, so an architecture requiring that state channel is not supported.
@@ -70,7 +88,8 @@ This illustrative seat-0 observation has two ants and no known water:
   "foes": [[12, 33, 1]],
   "food": [[11, 31]],
   "hills": [[12, 30, 0]],
-  "water": {"rle": [0, 6144]}
+  "water": {"rle": [0, 6144]},
+  "vis": {"rle": [0, 1054, 1, 11, 0, 5079]}
 }
 ```
 

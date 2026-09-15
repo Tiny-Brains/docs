@@ -2,52 +2,57 @@
   "about": "an illustrative observation: three ants, a foe, a food, both hills, three cells of water",
   "templating": true,
   "logic": {
-    "tb.get": [
-      {
-        "reduce": [
-          {
-            "var": "mine"
-          },
-          {
-            "width": {
-              "var": "accumulator.width"
+    "reduce": [
+      [
+        {
+          "reduce": [
+            {
+              "var": "mine"
             },
-            "indices": {
-              "merge": [
-                {
-                  "var": "accumulator.indices"
-                },
-                [
+            [
+              {
+                "var": "accumulator.0"
+              },
+              {
+                "merge": [
                   {
-                    "+": [
-                      {
-                        "*": [
-                          {
-                            "var": "current.0"
-                          },
-                          {
-                            "var": "accumulator.width"
-                          }
-                        ]
-                      },
-                      {
-                        "var": "current.1"
-                      }
-                    ]
-                  }
+                    "var": "accumulator.1"
+                  },
+                  [
+                    {
+                      "+": [
+                        {
+                          "*": [
+                            {
+                              "var": "current.0"
+                            },
+                            {
+                              "var": "accumulator.0"
+                            }
+                          ]
+                        },
+                        {
+                          "var": "current.1"
+                        }
+                      ]
+                    }
+                  ]
                 ]
-              ]
-            }
-          },
-          {
-            "width": {
-              "var": "size.1"
-            },
-            "indices": []
-          }
-        ]
+              }
+            ],
+            [
+              {
+                "var": "size.1"
+              },
+              []
+            ]
+          ]
+        }
+      ],
+      {
+        "var": "current.1"
       },
-      "indices"
+      null
     ]
   },
   "data": {
@@ -102,6 +107,16 @@
         3,
         0,
         4891
+      ]
+    },
+    "vis": {
+      "rle": [
+        0,
+        1054,
+        1,
+        11,
+        0,
+        5079
       ]
     }
   }

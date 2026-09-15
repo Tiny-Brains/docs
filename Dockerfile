@@ -30,8 +30,10 @@ FROM ${CLI_REF} AS cli
 
 # ---- the lesson replays, and the viewer that plays them -----------------------
 #
-# Trixie because `tinybrains` links axon, whose `ort` build wants a newer libstdc++ than bookworm
-# ships. python3 for make-map.py and the digest check.
+# Trixie rather than bookworm. The reason was `ort`'s prebuilt onnxruntime wanting a newer
+# libstdc++; the CLI links `tract` now, which is pure Rust and would run on anything, and this stays
+# because the CLI's own image is trixie-based and moving a base is a change both make in step.
+# python3 for make-map.py and the digest check.
 FROM rust:${RUST_VERSION}-trixie AS lessons
 RUN apt-get update \
  && apt-get install -y --no-install-recommends python3 \

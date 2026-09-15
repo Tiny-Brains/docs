@@ -2,18 +2,24 @@
   "about": "an illustrative observation: three ants, a foe, a food, both hills, three cells of water",
   "templating": true,
   "logic": {
-    "filter": [
+    "map": [
       {
-        "var": "hills"
+        "var": "mine"
       },
-      {
-        "==": [
-          {
-            "var": "3"
-          },
-          0
-        ]
-      }
+      [
+        {
+          "var": "0"
+        },
+        {
+          "val": [
+            [
+              1
+            ],
+            "size",
+            1
+          ]
+        }
+      ]
     ]
   },
   "data": {

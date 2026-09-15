@@ -1,7 +1,7 @@
 # Limits and budgets
 
 These values describe the checked-in Ants registration and deployment configuration
-as of **8 September 2026**. A deployed competition's announced rules take precedence
+as of **15 September 2026**. A deployed competition's announced rules take precedence
 when its configuration differs. Byte units are binary: 1 KiB = 1,024 bytes and
 1 MiB = 1,048,576 bytes.
 
@@ -9,20 +9,17 @@ when its configuration differs. Byte units are binary: 1 KiB = 1,024 bytes and
 
 | Limit | Current value | Applies to |
 |---|---:|---|
-| Raw ONNX asset | 96 MiB | Loader fetch/load ceiling |
-| Raw adapter asset | 4 MiB | Loader ceiling |
-| Maximum compressed size metric | 64 MiB | Largest eligible class |
+| Maximum size metric | 128 MiB | Largest eligible class |
 | ONNX opset range | 13–19 inclusive | Admission policy |
-| Adapter dialect | 1 | `adapter.json` |
-| Adapter expression depth | 64 | Evaluator nesting |
-| Adapter operations | 1,000,000 per direction | Each `in` and each `out` call |
-| Adapter boundary dtypes | int8, uint8, int16, int32, float32 | Tensors passed through the adapter |
+| Manifest ABI | `orion:model@1.0.0` | `manifest.json` |
+| Adapter operations | 1,000,000 | Each declared input's adapter, per evaluation |
+| Adapter boundary dtypes | bool, i8, u8, i16, u16, i32, u32, i64, u64, f32, f64 | Tensors an adapter hands the graph |
+| Probe inferences at admission | 5, at `probe_dims` | Whether the graph runs at all |
 
-The compressed metric includes initializer data and exact adapter bytes. Raw file
-limits are separate backstops. The [class table](../models/weight-classes.md)
-contains all five size boundaries; the
-[format page](../models/format.md) lists configured ONNX operators. There is no
-per-class compute cap.
+The size metric is `bytes(model.onnx) + bytes(manifest.json)`, uncompressed. The
+[class table](../models/weight-classes.md) contains all five size boundaries; the
+[format page](../models/format.md) lists configured ONNX operators. There is no per-class compute
+cap.
 
 ## Ants matches
 
@@ -30,7 +27,7 @@ per-class compute cap.
 |---|---:|
 | Players in each registered preset | 2 |
 | Maximum turns | 1,000 |
-| Turn deadline, including both adapter directions and inference | 1,000 ms |
+| Turn deadline, per seat, covering its adapters and its inference | 1,000 ms |
 | View radius squared | 77 |
 | Attack radius squared | 5 |
 | Gathering radius squared | 1 |
@@ -52,7 +49,8 @@ stays in place under the game rules.
 | Admission batch | Up to 4 candidates per run |
 | Verification claim timeout | 180 seconds |
 | Admission attempts | At most 3 before timeout rejection |
-| Validation deadline per reference observation | 5,000 ms |
+| Reference probe deadline, for the whole set | 5,000 ms |
+| Upload URL lifetime | 30 minutes, one-shot |
 | Trial repair limit | 3 trial rows |
 | Submission endpoint rate | 1 request/second, burst 5, per authenticated principal |
 
@@ -72,7 +70,6 @@ against every one of them, before you make a request.
 | `entries.versions_max_per_user` | releases you may enter across every model |
 | `entries.cooldown_s` | the gap between one model's submissions |
 | `classes.allow` | which weight classes may be entered at all |
-| `graph.dtypes` | which element types the weights may be stored in — a quantised-only season |
 | `graph.params_max` | a parameter ceiling, independent of the byte cap |
 | `graph.opset_min` / `opset_max` | the ONNX opset window |
 | `graph.op_allowlist` | the operator set, narrowing the platform's |
@@ -101,8 +98,8 @@ These are policy settings, not per-competitor match-rate guarantees. Read
 
 ## Where values come from
 
-Ants' `cartridge.json` declares presets, turn limits, and the adapter budget.
-The engine source implements geometry and game-ending rules. Jodi's admission
-judging fixes size boundaries, while the DevOps Orion templates configure opsets,
-trials, ratings, and scheduling. Axon's configuration sets raw asset ceilings.
-The [repositories page](../platform/repositories.md) identifies each owner.
+Ants' `cartridge.json` declares presets, turn limits, and the adapter budget. The engine source
+implements geometry and game-ending rules. The **season** fixes the size boundaries and every quota
+in the table above, in the database; Jodi judges against them. The DevOps Orion templates configure
+opsets, trials, ratings, scheduling and the operation budget the node enforces. The
+[repositories page](../platform/repositories.md) identifies each owner.

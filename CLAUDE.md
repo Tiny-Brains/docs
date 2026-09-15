@@ -92,17 +92,19 @@ mdBook preprocessor, writes the example's code and a link whose URL encodes that
 build. A pasted link is a second copy of the example, and drifts.
 
 - An example is `{about, templating, logic, data}` in `src/models/adapters/studio/`. Keep
-  `templating: true`: without it the Studio refuses every `tb.*` operator and every object literal.
+  `templating: true`: it is the Studio mode an adapter is read under.
 - The link format is the Studio's own `ui/src/utils/url-share.ts` in the datalogic-rs checkout:
   `{l, d, t}` as MessagePack, raw DEFLATE, base64url in `?s=`. If upstream changes it, every link
   in the book opens something else and nothing here notices.
-- **The Studio runs datalogic-rs, not Axon.** It shows `tb.*` calls with their arguments evaluated
-  and builds nothing; `{"==": [0, null]}` is `true` there and `false` in the arena; `split`, `upper`
-  and nineteen others exist there and are object literals in the arena; `tb.get` inside a `reduce`
-  body breaks there. An example must evaluate in the Studio to what its page says, and anything a
-  page claims about the arena — a cost, a tensor, a trap — must come from `tinybrains adapt` or
-  `tinybrains check`, which run Axon's evaluator. `models/adapters/studio.md` is the reader's copy
-  of that list; keep the two in step.
+- **The Studio runs datalogic-rs, and so does the arena** — since the 1.8.1 rebuild an adapter is
+  evaluated by the same engine, so most of the old differences are gone: `{"==": [0, null]}` is now
+  `true` on both sides. What still differs is **objects**: with Templating on the Studio treats a
+  multi-key object as a literal, and the arena refuses one — every object is an operation, and an
+  unknown key fails at *evaluation*, not at compile. That was measured with `tinybrains adapt`, not
+  assumed, and the accumulator examples are arrays because of it. An example must evaluate in the
+  Studio to what its page says, and anything a page claims about the arena — a cost, a tensor, a
+  trap — must come from `tinybrains adapt` or `tinybrains check`, which link the node's own two
+  libraries. `models/adapters/studio.md` is the reader's copy of that list; keep the two in step.
 - `theme/tb-studio.js` mounts an `embed` slot with datalogic-rs's mdBook widget, fetched from the
   Studio's site when the slot scrolls into view. It is unpinned; `design/tracker.md` has why.
 
@@ -129,7 +131,8 @@ build. A pasted link is a second copy of the example, and drifts.
   next. Architecture belongs in the platform chapters unless it explains a practical limitation.
 - **The book duplicates values it does not own.** `src/reference/limits.md` dates its snapshot and
   names the owner of each number (Ants' `cartridge.json`, Jodi's admission judging, the DevOps Orion
-  templates, Axon's config). Verify against the current producer before changing a number here, and
+  templates, the season's rules in the database). Verify against the current producer before
+  changing a number here, and
   never invent a match result or a replay identity to fill an example.
 - Relative links only, and `src/SUMMARY.md` must stay aligned with the files on disk — `mdbook
   build` fails otherwise.

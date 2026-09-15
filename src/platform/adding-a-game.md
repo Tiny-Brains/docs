@@ -2,7 +2,7 @@
 
 A game cartridge defines the world competitors act in: generation, rules,
 observations, actions, scoring, and replay reconstruction. The platform runs its
-WebAssembly component while Axon runs competitor models. Game code must not
+WebAssembly component while Orion's `models` entity runs competitor models. Game code must not
 schedule its own matches, fetch models, or write ratings.
 
 Ants is the reference implementation. The interface is designed for additional
@@ -26,10 +26,15 @@ The export uses a hyphen in `replay-decode`. Declare exact input fields in the
 plugin manifest rather than relying on this abbreviated table as an ABI schema.
 Ants' `plugin.toml` supplies a complete worked contract.
 
-Operate on a **wave of matches**, including waves where individual matches finish
-at different turns. Return no observations for finished matches. Echo opaque seat
-references so the caller can associate actions and failures without interpreting
-game state. Match results must provide one-based ranks with ties allowed.
+Operate on a **wave of matches**, including waves where individual matches finish at different
+turns. Return no observations for finished matches. Echo opaque seat references so the caller can
+associate actions and failures without interpreting game state. Match results must provide one-based
+ranks with ties allowed.
+
+> **The ladder sends a wave of one.** Kalam claims a single match row and plays it, so the wave
+> dimension is exercised only by the local runner and by a cartridge that wants it. Keep the ABI
+> wave-shaped anyway: matching a seat by `(m, seat)` rather than by position is what makes an echoed
+> reference safe, and it costs nothing when `m` is always 0.
 
 ## State and determinism
 

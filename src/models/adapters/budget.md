@@ -1,23 +1,24 @@
 # The budget
 
-Ants allows **1,000,000 adapter operations per direction per call**: the `in` program and the `out`
-program each get their own million. Inference is not counted; the whole call — both programs and
-the graph — has to fit the turn deadline.
+Ants allows **1,000,000 operations per adapter evaluation**. Each declared input's adapter gets its
+own million; a manifest with two inputs gets it twice, because the ceiling is per evaluation and not
+per call. Inference is not counted, and the whole call — your adapters and the graph — has to fit
+the turn deadline.
 
 ## What counts as an operation
 
 - **Every node the evaluator visits costs 1**: an operator, a literal, each element of an array
   written in the program. A loop body pays again for every element it runs over, and a branch that
   is not taken pays nothing.
-- **Every tensor operator also costs the larger of the elements it reads and the elements it
-  produces.** The charge is made before the work, so an operator that would exceed the budget is
-  refused rather than run.
-- **The two directions are counted apart.** `/validate` reports `ops_in` and `ops_out` for every
-  case. `/play` reports their sum, so a total over a million does not mean either direction was
-  over.
+- **A constant-folded subtree costs nothing**, and a subtree the evaluator recognises twice is
+  charged once. Both are optimisations, and both can move between versions.
+- **Every tensor operator also charges for the elements it moves**, by its own rule below. The
+  charge is made **before** the work, so an operator that would exceed the budget is refused rather
+  than run.
 
-`{"tb.zeros": [[128, 128], "int8"]}` costs 16,389: 1 for the operator, 16,384 for the elements it
-produces, and 4 for evaluating its arguments — the shape array, its two numbers, and the dtype.
+`{"zeros": [[128, 128], "i8"]}` costs about 16,389: 1 for the operator, 16,384 for the elements it
+produces, and a handful for evaluating its arguments — the shape array, its two numbers, and the
+dtype.
 
 ## What each operator charges
 
@@ -26,66 +27,67 @@ tensor argument, and `m` the number in the result.
 
 | Operator | Charge |
 |---|---|
-| `tb.zeros`, `tb.full` | `m` |
-| `tb.tensor` | The larger of `len(values)` and `m` |
-| `tb.scatter` | The larger of the number of points and `m`. **A scatter pays for the whole grid**, however few points it writes |
-| `tb.rle_expand` | The larger of `len(runs)` and `m` |
-| `tb.one_hot` | The larger of `len(indices)` and `m` |
-| `tb.range` | Its length |
-| `tb.stack`, `tb.concat` | The elements of all the inputs |
-| `tb.unstack`, `tb.transpose`, `tb.cast`, `tb.normalise`, `tb.dilate`, `tb.to_list` | `n` |
-| `tb.pad`, `tb.crop` | The larger of `n` and `m` |
-| `tb.argmax` | `n`: it reads everything |
-| `tb.gather` | The larger of `n` and `m`. **It reads the whole input**, not only the slices it keeps |
-| `tb.reshape`, `tb.shape`, `tb.dtype`, `tb.len`, `tb.at`, `tb.get` | Nothing: a reshape moves no elements |
+| `zeros`, `full` | `m` |
+| `tensor` | `m` |
+| `scatter` | the larger of the number of points and `m`. **A scatter pays for the whole grid**, however few points it writes |
+| `rle_expand` | the larger of `len(runs)` and `m` |
+| `one_hot` | `len(indices) × depth` |
+| `stack`, `concat` | the elements of all the inputs |
+| `unstack`, `transpose`, `cast`, `normalize`, `to_list` | `n` |
+| `pad`, `crop`, `gather` | the larger of `n` and `m` |
+| `argmax` | `n`: it reads everything |
+| `reshape`, `shape`, `dtype` | 1: a reshape moves no elements |
 
-## What a real adapter costs
+> **These numbers are not a contract.** The engine's own documentation says an operation count is
+> not stable across versions — a new fast path or a constant fold changes what gets dispatched.
+> Budget for the work you want to do, not for a number you measured. An adapter at 990,000 against
+> a 1,000,000 ceiling is one patch release away from a strike.
 
-The baselines' adapter — seven planes in and a dense policy map out, read in full in
-[A real adapter, piece by piece](walkthrough.md) — measured with `tinybrains check` over the
-reference observations on 11 September 2026. The worst case on each board:
+## What a real manifest costs
 
-| Board | `in` | `out` |
-|---|---:|---:|
-| 64 × 96 | 92,284 | 31,548 |
-| 96 × 96 | 138,314 | 46,188 |
-| 128 × 128 | 245,839 | 83,068 |
+The baselines' adapter — seven planes in, read in full in
+[A real manifest, piece by piece](walkthrough.md) — measured with `tinybrains adapt` over the ten
+reference observations. The worst case on each board:
 
-Both follow the board, not the ants: about 15 operations per cell in, because every plane is a full
-grid and the stack reads them all again, and about 5 per cell out, because `tb.gather` reads all
-five channels of the policy map. On the largest board that is a quarter of the budget in, and a
-twelfth of it out.
+| Board | Cells | Operations | Of the budget |
+|---|---:|---:|---:|
+| 64 × 96 | 6,144 | 86,091 | 8% |
+| 96 × 96 | 9,216 | 129,059 | 12% |
+| 128 × 128 | 16,384 | 229,415 | 22% |
+
+**It follows the board, not the ants**: about 14 operations per cell, because seven planes are each
+a full grid and the stack reads all seven again. The ants, foes, food and hills add a few operations
+each and are lost in the rounding.
 
 ## What over budget means
 
-The direction stops the moment a charge crosses the budget, and the call answers `ADAPTER_FAILED`
-with `over_budget: true`. It is never retried: the same adapter on the same observation costs the
-same on any machine. At admission it is a rejection, `ADAPTER_OVER_BUDGET`; in a match it is a
-strike, like a missed deadline.
+Evaluation stops the moment a charge crosses the budget. At admission that is a rejection,
+`ADAPTER_OVER_BUDGET`; in a match it is a strike, like a missed deadline, and five cumulative
+strikes forfeit the seat. It is never retried: the same adapter on the same observation costs the
+same on any machine.
 
 Passing admission does not prove every later turn fits. The count is taken on real input, and a
-late-game turn — more ants, more food and foes in sight, a larger board — can cost more than any
-reference case. An adapter whose cost follows the board, as the baselines' does, is predictable;
-one whose loops run over ants or visible objects grows with the game.
+late-game turn — more ants, more food and foes in sight — can cost more than any reference case. An
+adapter whose cost follows the board, as the baselines' does, is predictable; one whose loops run
+over ants or visible objects grows with the game.
 
 ## Measuring before you submit
 
-`tinybrains check model.onnx adapter.json` reports the worst case over the reference set, and
-`--json` adds `ops_in` and `ops_out` for every case. `tinybrains adapt adapter.json` prints the `in`
-count for each case, and `--obs` measures observations of your own.
-[Testing before you submit](../testing.md) has both. Compare the larger of the two directions with
-the budget, not their sum.
+`tinybrains adapt model.onnx manifest.json` prints what every reference case charged, and `--obs`
+measures observations of your own. `tinybrains check` reports the worst case and what fraction of
+the budget it used. [Testing before you submit](../testing.md) has both.
 
 ## Spending less
 
-- Build planes with `tb.scatter` and `tb.rle_expand`, never with a JSON loop over cells.
-- Each plane costs about two operations per cell: one to build it and one to stack it. Drop the
-  planes your graph does not use.
-- Derive vision with `tb.dilate`. Building it by hand costs about seven times as much, and is wrong
-  at the edges.
-- A dense policy head pays for the whole map on the way out. A per-ant head pays per ant, and needs
-  per-ant inputs to be one.
-- Convert to JSON as late and as small as possible: `tb.argmax` before `tb.to_list`, never after.
+- Build planes with `scatter` and `rle_expand`, never with a JSON loop over cells.
+- **Each plane costs about two operations per cell**: one to build it and one for the stack to read
+  it. Dropping a plane your graph does not use is the cheapest saving there is.
+- Read `vis` rather than deriving it. It is one `rle_expand`, and deriving it is not expressible
+  anyway ([why](dialect.md#reaching-outwards-and-the-one-place-you-cannot)).
+- Prefer one input over several. Each is its own evaluation with its own million, but each also
+  re-reads the observation.
+- The head costs you nothing: the referee reads it. An earlier contract charged an entry ~82,000
+  operations at 128 × 128 for a gather everybody wrote identically.
 
 Test all three [presets](../../games/ants/maps.md): the 128 × 128 board costs 2.7 times what the
 64 × 96 one does.

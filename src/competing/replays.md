@@ -17,7 +17,7 @@ engine digest, evaluator digest, and per-seat result.
 ## What is stored
 
 The current Kalam upload is a JSON envelope containing match and attempt IDs,
-seed, preset, engine and evaluator identities, dialect version, engine ranks,
+seed, preset, the engine digest and the Orion version that played it, engine ranks,
 scores, ending reason, turn count, and action deltas. A delta uses `t` for the
 turn and `a` for a list of per-seat strings. Each string contains directions in
 that seat's ant order, with `-` for holding.

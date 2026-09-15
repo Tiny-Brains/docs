@@ -37,17 +37,16 @@ Run checks appropriate to the repository and changed boundary:
 |---|---|
 | Docs | `mdbook build`; check relative links and examples |
 | Ants | `./deny.sh`, `cargo test`, and `./build.sh` for regenerated distributables |
-| Axon | `cargo test`; relevant adapter, inference, or store cases |
 | Jodi plugins | `cargo test --manifest-path plugins/tb-rating/Cargo.toml` and the corresponding pairing manifest |
 | Soma, Jodi, Kalam definitions | `orion-server lint . --deny-warnings` and `./scripts/check-sql.sh` |
 | Web | `npm run lint` and `npm run build` |
-| DevOps | `./scripts/check/configs.sh`, loader output, and a representative end-to-end flow |
+| DevOps | `./scripts/check/configs.sh`, loader output, `cargo build` in `cli/`, and a representative end-to-end flow |
 
-SQL checks create disposable scratch databases and verify shipped statements;
-they do not prove live scheduling or concurrency. Axon's live S3 tests require
-explicit store configuration and otherwise skip their external exercises.
-Configuration checks can skip runtime parsing when the required image is missing.
-Report what actually ran, including those limits.
+SQL checks create disposable scratch databases and verify shipped statements; they do not prove
+live scheduling or concurrency. Configuration checks can skip runtime parsing when the required
+image is missing. `tinybrains conform` is the check that keeps the CLI's match loop and Kalam's
+workflow telling the same story, and it needs a replay to run against. Report what actually ran,
+including those limits.
 
 An API contract change should be exercised through the HTTP workflow. A game or
 adapter change needs behavioral examples. A replay change needs reconstruction

@@ -2,39 +2,48 @@
   "about": "the worked observation from What your model sees",
   "templating": true,
   "logic": {
-    "positions": {
-      "tb.tensor": [
-        {
-          "reduce": [
+    "reshape": [
+      {
+        "stack": [
+          [
             {
-              "var": "mine"
-            },
-            {
-              "merge": [
+              "scatter": [
                 {
-                  "var": "accumulator"
+                  "var": "mine"
                 },
                 {
-                  "var": "current"
-                }
+                  "var": "size"
+                },
+                "i8"
               ]
             },
-            []
-          ]
-        },
-        [
+            {
+              "rle_expand": [
+                {
+                  "var": "water.rle"
+                },
+                {
+                  "var": "size"
+                },
+                "i8"
+              ]
+            }
+          ],
+          0
+        ]
+      },
+      {
+        "merge": [
+          [
+            1,
+            2
+          ],
           {
-            "length": [
-              {
-                "var": "mine"
-              }
-            ]
-          },
-          2
-        ],
-        "float32"
-      ]
-    }
+            "var": "size"
+          }
+        ]
+      }
+    ]
   },
   "data": {
     "size": [
@@ -75,6 +84,16 @@
       "rle": [
         0,
         6144
+      ]
+    },
+    "vis": {
+      "rle": [
+        0,
+        1054,
+        1,
+        11,
+        0,
+        5079
       ]
     }
   }
