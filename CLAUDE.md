@@ -37,9 +37,13 @@ from a running stack, which nothing here can reproduce.
 `tutorials/build.sh` still runs by hand — it needs `tinybrains` on PATH and a viewer at
 `$ANTS_DIR/viz/dist`; both can come out of the images with `docker cp`.
 
-> **The image build is currently RED, on purpose.** `real-match.json` was captured on engine
-> `d41f863f…` and the cartridge now ships `0807b641…`, so the digest check refuses it. That check is
-> the whole guarantee — see below — and the fix is a re-captured match, not a looser check.
+> **GREEN since 15 September 2026.** `real-match.json` was re-captured from a running stack's
+> replay bucket on the current engine (`185a2845…`) and all eight replays agree with the viewer. It
+> stays **source** — the build copies it and checks its digest rather than regenerating it — but
+> `tutorials/README.md` now records what is in it and the two commands that read another out of the
+> bucket, so a re-capture is a recipe. That digest check is the whole guarantee: a viewer
+> re-simulating with a different engine does not fail, it draws a plausible match that never
+> happened.
 
 ## How a page shows a rule
 

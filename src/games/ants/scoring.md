@@ -11,17 +11,24 @@ useful only insofar as they help produce a better result.
 | Lose one of your hills | −1 |
 | Kill an ant, gather food, or hold territory | 0 |
 
-Scores start at zero and can become negative. If one colony is the last with
-living ants, every enemy hill still standing is treated as razed: the survivor
-gets +2 per hill and each owner loses 1 per hill.
+**A colony starts with one point per hill it owns**, so a two-player match opens
+at 1&ndash;1. That opening point is deliberate: it puts a colony that loses its
+only hill and razes nothing on **zero rather than on −1**. Every Ants board seats
+exactly one hill per player, so on this game's maps a score does not in fact go
+below zero — the table is the general rule, and the floor is a property of the
+boards rather than of the scoring.
 
-For example, in a two-player match with one hill each, a successful raze gives
-the attacker 2 and the defender −1. Having more ants does not add a tiebreaker.
+If one colony is the last with living ants, every enemy hill still standing is
+treated as razed: the survivor gets +2 per hill and each owner loses 1 per hill.
+
+For example, in a two-player match with one hill each, both open on 1, and a
+successful raze finishes **3&ndash;0** — the attacker's own point plus 2, against
+the defender's point less 1. Having more ants does not add a tiebreaker.
 
 
 <div class="tb-replay" data-src="tutorials/3-raze.json" data-turn="7" data-zoom="5"></div>
 
-<p class="tb-replay-caption">The attacker reaches the hill on turn 7: +2 to it, −1 to the owner. Played by the engine from a written script, so the rule happens exactly. Arrow keys step a turn at a time; click a cell to see what is on it.</p>
+<p class="tb-replay-caption">The attacker reaches the hill on turn 7: +2 to it, −1 to the owner, so the 1&ndash;1 opening becomes the 3&ndash;0 this replay ends on. Played by the engine from a written script, so the rule happens exactly. Arrow keys step a turn at a time; click a cell to see what is on it.</p>
 
 <!-- replay-visualiser: scoring-hill-result — filled.
 Asset: tutorials/3-raze.json, turn 7. Regenerate with tutorials/build.sh.

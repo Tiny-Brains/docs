@@ -57,7 +57,7 @@ use that engine version.
 
 <div class="tb-replay" data-src="tutorials/real-match.json" data-turn="40"></div>
 
-<p class="tb-replay-caption">A real match between the two sample models, on a <code>standard</code> board. Neither plays well: one marches in a straight line and the other never moves, so the match ends in the food stalemate after 161 turns.</p>
+<p class="tb-replay-caption">A real ladder match on a <code>standard</code> board, between two entries of the same weight class. It is decisive: seat 1 razes seat 0's hill and keeps its own, so the match ends <code>rank_stabilized</code> after 246 turns at 3&ndash;0. Neither seat was struck.</p>
 
 <!-- replay-visualiser: ants-overview — filled.
 Asset: tutorials/real-match.json, turn 40. Regenerate with tutorials/build.sh.

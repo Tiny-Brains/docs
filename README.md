@@ -301,16 +301,21 @@ replays are gitignored, and `Dockerfile` rebuilds them — the viewer from the c
 image, the `tinybrains` binary that plays the lessons from devops'. Building the book no longer
 needs the platform checked out around it, nor a Rust toolchain.
 
-**It does not currently finish.** The seven scripted lesson replays regenerate cleanly on the
-current engine, but `tutorials/replays/real-match.json` was captured on `sha256:d41f863f…` and the
-cartridge now ships `sha256:0807b641…`, so `build.sh`'s digest check refuses it. That file is
-**source, not build output** — a real match captured from a running stack, which nothing here can
-reproduce — and it is embedded on four pages, including the introduction.
+**15 September 2026 — the build is GREEN, and `real-match.json` is a match worth showing.** The
+capture that held it red was played on engine `sha256:d41f863f…` against a cartridge that has since
+moved twice, and it was a poor advertisement besides: two smoke fixtures standing still for 161
+turns to a scoreless `idle_food` draw. It is replaced by a real ladder match pulled from a running
+stack's replay bucket on `sha256:185a2845…` — `micro-bc` against `micro-percell`, both `micro`
+class, `standard-01`, 246 turns, `rank_stabilized`, **3&ndash;0** with neither seat struck. All
+eight replays now agree with the viewer.
 
-The fix is a re-captured match, not a looser check: a viewer re-simulating with a different engine
-does not fail, it draws a plausible match that never happened. When you replace it, check that the
-`data-turn` on each of those four pages still falls inside the new match — `src/competing/matches.md`
-asks for turn 161.
+Two captions moved with it, because both described the old match: `src/games/ants.md` said neither
+model plays well, and `src/competing/matches.md` asked for turn 161 as "its last turn" — the last
+turn is 246 now. The other two embeds (turn 1, turn 20) are generic and did not move.
+
+The capture is still **source, not build output**, and it is no longer a mystery: `tutorials/README.md`
+records what is in it, which stack it came from, and the two commands that read another out of the
+bucket.
 
 **Decision 46, 10 September 2026 — no compute cap.** Nine pages changed. The weight-class table lost
 its FLOP column and says plainly that size is the only thing a class limits, with the turn deadline —

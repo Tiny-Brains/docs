@@ -58,7 +58,44 @@ the rule, and that is why the fallback is a sentence rather than a broken frame.
 | `3-raze` | An ant reaching the enemy hill: +2 to the razer, −1 to the owner, `lone_survivor` |
 | `4-growth` | Food gathered on one turn becoming an ant on the next, then two friendly ants walking into one square |
 | `preset-*` | One turn on a real catalogue board, so a page can show the terrain a preset is played on |
-| `real-match.json` | **Captured, not generated.** A real match between the sample models, copied from a running stack. `build.sh` does not regenerate it — the digest check is what catches it going stale |
+| `real-match.json` | **Captured, not generated.** A real ladder match, pulled out of the replay bucket of a running stack. `build.sh` does not regenerate it — the digest check is what catches it going stale. See below for how it was taken |
+
+## Re-taking `real-match.json`
+
+It is the one file here that is source rather than output: a match the **ladder** played, which is
+what makes it worth showing and also what stops `build.sh` regenerating it. When the engine moves it
+has to be re-captured by hand. It should not be a mystery file while it waits, so:
+
+**What is in it now.** A real ladder match on `standard-01`, taken from a local stack's replay
+bucket on 15 September 2026 — `micro-bc` against `micro-percell`, both `micro` class, 246 turns,
+`rank_stabilized` 3&ndash;0 to `micro-bc`, neither seat struck. Played on engine `185a2845…`.
+
+**How to take another.** Run the stack until it has rated some matches, then read a replay out of
+the bucket. `matches.replay_key` says which object belongs to which row:
+
+```sh
+# the rated matches and where their replays are
+docker exec tinybrains-db-1 psql -U soma -d soma -c \
+  "select id, reason, turns, replay_key from matches where status='rated'"
+
+# pull the bucket out; pick a replay whose map_id and turn count suit the four pages below
+docker exec tinybrains-minio-1 mc alias set loc http://127.0.0.1:9000 tinybrains tinybrains-dev-secret
+docker exec tinybrains-minio-1 mc cp --recursive loc/tinybrains-replays /tmp/rp
+docker cp tinybrains-minio-1:/tmp/rp ./capture
+```
+
+Copy the chosen file to `tutorials/replays/real-match.json` **verbatim** — the bytes the platform
+wrote are the point, so do not reformat it or rename its `match_id`.
+
+**Pick a match that teaches something.** The capture this replaced ran two smoke fixtures that never
+moved, to a scoreless `idle_food` draw after 161 turns — a poor thing to open the book with. Prefer
+a decisive one, long enough that every `data-turn` below still lands inside it.
+
+**Then check the four pages that embed it.** `src/introduction.md` (turn 1), `src/games/ants.md`
+(turn 40), `src/competing/replays.md` (turn 20) and `src/competing/matches.md` (its LAST turn, which
+is `turns` itself — the decoder yields frames 0..`turns`). Every `data-turn` must still fall inside
+the new match, and the captions on the last two describe *this* match — ants.md names the result and
+matches.md says "its last turn" — so both move when the capture does.
 
 ## What the viewer cannot show
 
