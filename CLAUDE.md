@@ -110,7 +110,9 @@ build. A pasted link is a second copy of the example, and drifts.
   trap — must come from `tinybrains adapt` or `tinybrains check`, which link the node's own two
   libraries. `models/adapters/studio.md` is the reader's copy of that list; keep the two in step.
 - `theme/tb-studio.js` mounts an `embed` slot with datalogic-rs's mdBook widget, fetched from the
-  Studio's site when the slot scrolls into view. It is unpinned; `design/tracker.md` has why.
+  Studio's site when the slot scrolls into view. It is unpinned — the bundle is whatever that site
+  last deployed, so a breaking change there surfaces as the slot's fallback sentence and never as a
+  red build. Vendoring it would pin the bundle but not the Studio links the chapters open.
 
 ## The theme
 

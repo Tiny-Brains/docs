@@ -289,7 +289,8 @@ Nine examples live under `src/models/adapters/studio/`. Every link was decoded w
 libraries and evaluated with its engine, and every claim about the arena — the costs, the `null`
 trap, `split` as a literal, a `null` scatter coordinate landing in column 0 — was run through
 `tinybrains adapt` or `tinybrains check`. The embed is datalogic-rs's own mdBook widget, loaded from
-its site and unpinned; `design/tracker.md` holds that as a decision.
+its site and unpinned — a breaking change there surfaces as the slot's fallback sentence and never as
+a red build, and vendoring it would pin the bundle but not the Studio links the chapters open.
 
 **11 September 2026 — a baseline is described as an entry.** `competing/matches.md` and the
 glossary say what the platform now does: a baseline is paired, rated and settled like any entry,
