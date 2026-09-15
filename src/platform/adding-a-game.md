@@ -5,10 +5,12 @@ observations, actions, scoring, and replay reconstruction. The platform runs its
 WebAssembly component while Orion's `models` entity runs competitor models. Game code must not
 schedule its own matches, fetch models, or write ratings.
 
-Ants is the reference implementation. The interface is designed for additional
-games, but the current package and registration scripts still contain Ants-specific
-configuration. Adding a game requires checking those integration points; it is
-not yet a finished self-service upload flow.
+Ants is the reference implementation. **The local runner already takes a second game without a line
+of Rust** — `tinybrains` knows five function names, `cartridge.json` and the replay envelope, and
+reads every board, preset, seat count and limit from the manifest, so adding a game to it is an
+entry in DevOps' `games/registry.toml`. The *ladder* is the harder half: Jodi's and Kalam's package
+definitions and the registration scripts still carry Ants-specific configuration, so adding a game
+there requires checking those integration points. It is not yet a self-service upload flow.
 
 ## The five functions
 
@@ -62,8 +64,12 @@ Ants generates `cartridge.json` from its preset implementation.
 
 Generate registration facts from the same definitions the engine uses so map
 sizes and seat counts do not drift. Ship the component and manifests together.
-The intended trust model includes signed components; component signing and trust
-enforcement are not yet complete in the current stack.
+
+**Components are signed, and the signature is enforced.** Every plugin carries a detached Ed25519
+signature over its `sha256:` digest, minted by whoever holds the deployment's trust key rather than
+by the package — a component whose signature is missing or does not match brings the node up
+`degraded` with its channels quarantined. A new game's component is signed the same way, and
+re-signed on every rebuild, because a rebuild changes the digest.
 
 ## Registering and integrating
 

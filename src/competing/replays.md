@@ -16,11 +16,21 @@ engine digest, Orion version, and per-seat result.
 
 ## What is stored
 
-The current Kalam upload is a JSON envelope containing match and attempt IDs,
-seed, preset, the engine digest and the Orion version that played it, engine ranks,
-scores, ending reason, turn count, and action deltas. A delta uses `t` for the
-turn and `a` for a list of per-seat strings. Each string contains directions in
-that seat's ant order, with `-` for holding.
+The envelope is JSON, and it is everything needed to play the match again from nothing:
+
+| Field | What it is |
+|---|---|
+| `match_id`, `attempt_token` | Which match, and which attempt at it |
+| `seed`, `preset`, `map_id`, `map` | The board — `map` carries its rows, columns, water, hills, food and symmetry, so a replay needs no map catalogue beside it |
+| `engine_digest`, `orion_version` | The cartridge that played it, and the runtime that ran the models |
+| `max_turns`, `strike_ceiling` | The limits it was played under |
+| `deltas` | The action stream: `t` is the turn, `a` a list of per-seat strings, each holding that seat's directions in its ant order with `-` for a hold |
+| `engine_ranks`, `scores`, `reason`, `turns` | How it ended |
+| `seats` | Per seat: the model, both hashes, `strikes`, `forfeited`, and the inference it spent — `infer_us_total`, `infer_us_max`, `infer_turns` |
+
+**The per-seat block is where a disappointing result usually explains itself.** A seat with strikes
+missed turns; `infer_us_max` against the 1,000 ms deadline says whether it was close to missing
+more.
 
 These are actions, not pre-rendered frames. The matching engine reconstructs
 positions by replaying the actions deterministically. A model is not run again
@@ -30,18 +40,23 @@ to choose new moves during playback.
 ranking. Use the match record's player ranks for the official competitive result;
 keep the engine ranks when diagnosing game behavior.
 
-## Watching a replay: current tooling
+## Watching a replay
 
-The browser replay viewer is not implemented yet. Ants has a `replay-decode`
-export and an engine replay test, but the stored-envelope integration is also
-unfinished: the current decoder requires a packed `state0`, while Kalam's upload
-contains seed and preset without that field. Feeding a downloaded envelope
-straight to that decoder is not yet a complete playback path.
+Three ways, all of them driving the same cartridge that played the match:
 
-A future viewer needs to resolve the matching engine and bridge initialization
-from the recorded envelope, then verify reconstruction against known outcomes.
-Until that integration exists, retain the raw JSON and match metadata for
-inspection; do not interpret a missing viewer as a missing match result.
+- **The site.** A match page plays it, full screen. This is the one to reach for.
+- **`tinybrains view replays/<file>.json`**, which opens a downloaded envelope in your browser with
+  no server involved.
+- **`tinybrains conform replays/<file>.json`**, which is not watching but checking: it rebuilds the
+  match from the envelope alone, plays it locally, and diffs every field and every turn against
+  what was recorded. Worth running on a replay of your own entry — a difference means two engines
+  disagree, which is a bug worth reporting.
+
+The viewer **re-simulates from the action stream**; it does not play back stored frames, and no
+model is run again to choose new moves. That is why the engine identity matters more than it looks
+like it should: a viewer re-simulating with a different engine than the one that played does not
+fail, it draws a plausible match that never happened. The envelope names its `engine_digest` so the
+two can be compared.
 
 
 <div class="tb-replay" data-src="tutorials/real-match.json" data-turn="20"></div>

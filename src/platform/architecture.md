@@ -11,7 +11,7 @@ these services to enter a hosted competition.
 
 | Part | Responsibility |
 |---|---|
-| Web | Browser sign-in, session display, and current API probes; future competition UI |
+| Web | The browser application: sign-in, the leaderboard, matches and replays, submission and upload, and the season's own pages |
 | Soma | Public HTTP API, sessions, submissions, seasons, and shared schema |
 | Jodi | Four clocks: admit, pair, count, and withdraw |
 | Kalam | Claim matches, play turns, record results and replays |

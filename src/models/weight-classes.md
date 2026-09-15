@@ -13,8 +13,7 @@ reports — `GET /v1/games/{game}` and `GET /v1/games/{game}/seasons` both carry
 entry. A season may also offer only some of the classes: a focused season might run
 Nano alone, and a model measuring into a class it is not running is rejected
 `CLASS_NOT_OFFERED` — which is not the same refusal as being too large for every
-class there is. A focused season might run
-Nano alone.
+class there is.
 
 These are the limits the platform started with, and the default a new season
 inherits from the season before it:

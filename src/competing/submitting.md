@@ -38,13 +38,15 @@ entered again there.
 
 ## Make the call
 
-Sign in with GitHub through the competition site. The current API authenticates
-with the HttpOnly `soma_session` browser cookie; standalone API tokens are not
-implemented. The browser shell currently supplies sign-in and API probes, rather
-than a complete submission form.
+**The site has a form for this**, and it is the shortest path: sign in with GitHub, go to
+`/submit`, pick the model — it offers to create one if you have none — and give it the tag and the
+two hashes. It stays on the page after the `201` and hands you the two upload commands, because the
+submission is not finished until the files are in the bucket.
 
-A same-origin browser client can make this request after sign-in. Replace the
-repository, tag, and both illustrative hashes:
+What follows is the same request made directly, for scripting. The API authenticates with the
+HttpOnly `soma_session` browser cookie; standalone API tokens are not implemented, so a script runs
+same-origin in the browser rather than from a shell. Replace the repository, tag, and both
+illustrative hashes:
 
 ```javascript
 const response = await fetch('/v1/submissions', {
@@ -118,11 +120,15 @@ admission at once; a season may additionally cap how many of yours may be in
 flight together. A model's currently active version does not prevent a
 replacement submission to it.
 
+`GET /v1/games/{game}/submission` reports your standing against every one of those rules before you
+make a request, in the same words the refusal would use.
+
 ## What happens next
 
-Read `GET /v1/versions/{version_id}`. Initially status is `testing`, with phase
-`queued` or `verifying`. A successful admission changes it to `verified` and
-`awaiting_trial`; successful trial completion promotes it to `active`.
+Watch it on the version's page, or read `GET /v1/versions/{version_id}`. Initially status is
+`testing`, with phase `queued` or `verifying`. A successful admission changes it to `verified` and
+`awaiting_trial`; successful trial completion promotes it to `active`. That read is cached for ten
+seconds, so poll on that period or slower — a tighter loop returns the same body.
 
 A request error is different from a later rejection. Missing hashes return `400`;
 season or duplicate/candidate conflicts return `409`; an invalid session returns

@@ -12,17 +12,25 @@ the whole-system map, the decision log, the deployment design, and the Orion not
 Verify claims against the current producer and consumer before copying them into
 code or docs.
 
-Concrete open areas include the browser replay viewer and envelope integration,
-a cartridge-owned reference observation set, competitor tooling, and production
-rollout verification. For a user-visible change, describe the competitor's trigger
-and resulting behavior rather than only the internal component involved.
+Each repository's open work is the **Status** block of its own `README.md`, which is the list to
+read before starting — the browser replay viewer, the envelope integration and the cartridge-owned
+reference observation set were all on this page as open areas and are all shipped. Production
+rollout verification and the cloud autoscaler are still open. For a user-visible change, describe
+the competitor's trigger and resulting behavior rather than only the internal component involved.
+
+Every repository commits straight to `main`; there are no feature branches.
 
 ## Source conventions
 
-Edit Jodi and Kalam workflows in their Python generators, regenerate, and commit
-the generated JSON. Keep built plugin artifacts and manifests with source changes
-that alter them. When updating Ants, rebuild its artifacts and explicitly vendor
-them into Kalam if that repository is part of the change.
+Edit Jodi and Kalam workflows in their Python generators and regenerate — but **do not commit the
+output**. Generated JSON, built plugins and Ants' artifacts are gitignored and ship in each
+repository's artifact image instead, so what a change carries is the generator edit; the image is
+rebuilt from it. `gen-jodi.py --check` guards the generated workflows against a hand edit.
+
+**Rebuilding Ants is what updates the engine Kalam plays**, because Kalam's image takes the
+component from Ants' rather than vendoring a copy. A rebuild changes the digest even when no
+behaviour changed, so prove a refactor with artifact diffs and per-turn output hashes rather than
+with the wasm, and re-sign the plugins afterwards.
 
 Put schema changes in Soma migrations and check every consuming package. Keep
 deployment addresses and credentials in configuration. Use the pinned Orion
@@ -35,12 +43,17 @@ Run checks appropriate to the repository and changed boundary:
 
 | Area | Existing checks, from that repository's root |
 |---|---|
-| Docs | `mdbook build`; check relative links and examples |
-| Ants | `./deny.sh`, `cargo test`, and `./build.sh` for regenerated distributables |
+| Docs | `mdbook build`; `tutorials/build.sh`, whose digest check refuses a replay the vendored viewer cannot faithfully draw |
+| Ants | `./deny.sh`, `cargo test`, and `./build.sh` for regenerated artifacts |
 | Jodi plugins | `cargo test --manifest-path plugins/tb-rating/Cargo.toml` and the corresponding pairing manifest |
-| Soma, Jodi, Kalam definitions | `orion-server lint . --deny-warnings` and `./scripts/check-sql.sh` |
+| Soma, Jodi, Kalam definitions | `orion-server lint . --deny-warnings`, `./scripts/check-defs.sh`, and `./scripts/check-sql.sh` |
 | Web | `npm run lint` and `npm run build` |
 | DevOps | `./scripts/check/configs.sh`, loader output, `cargo build` in `cli/`, and a representative end-to-end flow |
+
+`check/configs.sh` is the one that spans repositories: it asserts the constants that must be equal
+on both sides of a boundary — Kalam's strike ceiling against Jodi's forfeit count, the priors Soma
+and Jodi share, the engine digest against what the season and each replica name, the model prefix,
+the adapter budget and the Orion version.
 
 SQL checks create disposable scratch databases and verify shipped statements; they do not prove
 live scheduling or concurrency. Configuration checks can skip runtime parsing when the required

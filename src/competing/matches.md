@@ -48,17 +48,21 @@ count, timing, and the engine/evaluator identities. Each player has a seat,
 model ID, owner, version, rank, score, strikes, and per-ladder rating changes when
 available. `is_trial` tells you whether the result is an unrated trial.
 
-`GET /v1/matches?model={model_id}` lists finished and rated history only. It is
-not a complete queue or failure monitor. Read the version's latest `trial` for
-trial progress; an owner-scoped listing of all other match states is not yet
-implemented.
+`GET /v1/matches?model={model_id}` is the public history: finished and rated only, no trials. It is
+deliberately not a queue monitor — the public record of a ladder is what was played.
+
+**For your own matches, read `GET /v1/me/matches`.** It answers the half the public listing cannot:
+your queued pairings, your cancellations with the `withdrawn_reason` and the version that replaced
+you, your failures with `fault_reason` and `fault_seat`, and your trials. Each seat is marked
+`mine`, so a match between two of your own models is still readable. It pages with a cursor.
 
 ## Cancelled and failed matches
 
-Cancellation means the queued pairing was no longer eligible, such as when a
-version was superseded, the engine changed, or the season closed. It is not a
-played loss and does not change ratings. Detail can include `withdrawn_reason`
-and `successor_id`.
+Cancellation means the queued pairing was no longer eligible. It is not a played loss and does not
+change ratings. `withdrawn_reason` says which: your own successor was promoted (and `successor`
+names it), `ENGINE_RETIRED` when the season's engine moved under the row, or `SEASON_CLOSED` when
+the season closed. Only **queued** matches are withdrawn — one already claimed or running finishes
+and counts for the versions originally paired.
 
 Failure means execution could not finish. Detail can include `fault_reason` and
 `fault_seat`, distinguishing a particular model from a broader platform problem.

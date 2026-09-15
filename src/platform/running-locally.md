@@ -1,29 +1,29 @@
 # Running the platform locally
 
 The local stack lets you exercise submission, admission, trials, matches, and
-rankings together. It is also the current route to playing an ONNX entry locally;
-a standalone model-versus-model runner is not supplied yet.
+rankings together. It is not how you play an entry locally — `tinybrains` does that with no
+Compose, no database and no season, and [Testing before you submit](../models/testing.md) is the
+page for it. Bring the stack up when you want the *loop*: a submission that is admitted, given a
+trial, promoted, paired and rated.
 
 ## What you need
 
-Install Docker with Compose v2 and a POSIX shell. Check out the application
-repositories as siblings:
+Install **Docker Engine 28 or newer with Compose v2.32 or newer** — earlier versions cannot mount
+a volume from an image, which is how every package reaches the node that runs it — and a POSIX
+shell.
+
+**No checkout of any package is required.** Each one ships as an **artifact image** that Compose
+mounts read-only, `type: image`, with no copy in between: `<PKG>_REF` pointed at published tags is a
+complete stack. Sibling checkouts are only where those images are built from by default:
 
 ```text
 tinybrains/
-  soma/
-  jodi/
-  kalam/
-  ants/
-  web/
-  devops/
+  soma/     jodi/     kalam/
+  ants/     web/      devops/
 ```
 
-Every package now ships as an **artifact image** that Compose copies into a volume, so
-`docker compose up` needs **no checkout of any of them** — the sibling directories above are only
-where those images are built from by default, and `<PKG>_REF` pins a published tag instead. Add
-`-f docker-compose.dev.yml` to bind a checkout back over its volume when you want to edit a package
-in place.
+Add `-f docker-compose.dev.yml` to bind a checkout back over its image mount when you want to edit
+a package in place.
 
 The stack uses the pinned Orion **1.8.1** runtime, Postgres 16, Redis, MinIO, and the browser
 application. **There is no inference sidecar**: each node runs models itself. Python 3 is needed for
@@ -31,16 +31,18 @@ supplementary SQL checks; host Rust is not required.
 
 ## Configure the stack
 
-From `devops/`, create your local configuration if it does not already exist:
+From `devops/`, one command does every credential:
 
 ```sh
-test -e .env || cp .env.example .env
-openssl rand -hex 32
+./scripts/setup/init.sh
 ```
 
-Use the generated value for `SOMA_SESSION_SECRET`. Fill the required database,
-restricted Kalam role, storage, and GitHub OAuth values listed in `.env.example`.
-Keep local credentials in the ignored `.env` file.
+It creates `.env`, mints `POSTGRES_PASSWORD`, `SOMA_SESSION_SECRET` and `ORION_ADMIN_KEY`,
+generates the Ed25519 plugin trust root for this machine, builds or pulls the two package images
+that ship plugins, and signs their components. It is idempotent, so it is also the repair command
+after a plugin or engine rebuild — an unsigned component comes up quarantined, not broken in a way
+that names itself. `.env.example` is the contract it fills; keep local credentials in the ignored
+`.env`.
 
 Register a GitHub OAuth App with homepage `http://localhost:5173` and callback
 `http://localhost:5173/v1/auth/github/callback`. Set `APP_URL` and
@@ -49,17 +51,28 @@ HTTPS deployments require their corresponding cookie policy.
 
 ## Bring it up
 
+The one thing `init.sh` cannot do is register a GitHub OAuth App; set `GITHUB_CLIENT_ID` and
+`GITHUB_CLIENT_SECRET` yourself, as below. Then build the package images from the checkouts and
+start the stack:
+
 ```sh
-docker compose up --build -d
+docker compose --profile build build   # skip this when <PKG>_REF pins published tags
+docker compose up -d
 ./scripts/check/configs.sh
 docker compose ps -a
 docker compose logs loader
 ```
 
-The loader registers the game, model/reference data, engine identity, storage,
-and Orion packages. Check that it finished successfully and that channels or
-plugins were not quarantined. A healthy server before package loading is not yet
-a working competition.
+**`--profile build` is not optional and `up --build` is not a substitute.** The package images sit
+on their own profile, so an ordinary `up` neither builds nor rebuilds them; it mounts whatever
+`<PKG>_REF` already names.
+
+Two one-shots run before the servers. **`db-bootstrap`** creates the Orion state database, applies
+Soma's migrations when the platform database is empty, and applies the seed on every run — it
+records a digest of the migrations it applied and refuses a schema rewrite it cannot apply, naming
+the command that fixes it. **`loader`** then registers the game, reference data, engine identity,
+storage and the Orion packages. Check that both finished and that no channel or plugin was
+quarantined. A healthy server before package loading is not yet a working competition.
 
 Open `http://localhost:5173`, or verify the proxy:
 
@@ -67,17 +80,21 @@ Open `http://localhost:5173`, or verify the proxy:
 curl --fail --silent --show-error http://localhost:5173/v1/games
 ```
 
-Local host ports include Soma at 8080, the first Kalam at 8082, Web at 5173, and MinIO at
-9000/9001. They bind to loopback. For application requests and sign-in, use the browser origin
-consistently.
+Local host ports include Soma at 8080, the first Kalam at 8082, Web at 5173, the Orion console at
+8081, and MinIO at 9000/9001. They bind to loopback. For application requests and sign-in, use the
+browser origin consistently.
+
+For a second replica, add the fleet overlay — `docker compose -f docker-compose.yml -f
+docker-compose.fleet.yml up -d`, which brings up `kalam-2` and gives the loader its admin URL in the
+same file. Use the same `-f` pair for every later command in that stack, because a replica the
+loader does not know about receives no package and is invisible capacity.
 
 ## Sign in and make a match happen
 
-Use the Web shell's GitHub sign-in, then inspect `/v1/me`, games, and seasons.
-The shell currently offers API probes rather than all competition screens. Submit
-a public release using the [authenticated request example](../competing/submitting.md).
-A game needs an open local season, an eligible account, and at least one runnable
-opponent for the trial and regular matches.
+Sign in with GitHub at `http://localhost:5173`, then submit through the site's own `/submit` form —
+it creates the model if you have none, and hands you the two upload commands after the `201`. A
+game needs an open local season, an eligible account, and at least one runnable opponent for the
+trial and regular matches.
 
 The development fixture script can populate baseline assets:
 
@@ -85,11 +102,14 @@ The development fixture script can populate baseline assets:
 ./scripts/dev/seed-baselines.sh
 ```
 
-Seed rows containing hashes alone are not runnable models. The model bytes must
-exist in the same store used by admission and replica loaders. Season creation
-requires an administrator account; signing in as a competitor does not grant
-that role. Use the deployment's administrator provisioning and Soma season route
-when a local season needs to be created.
+It reads the trained artifacts from an `ants-baselines` checkout and puts both the rows and the
+bytes in place. **The seed alone is not enough**: `compose/bootstrap/seed.sql` creates each baseline
+with a placeholder hash, and a node re-hashes what it fetches and refuses a mismatch, so until this
+script runs every match seating a baseline is released unplayed — which is also the answer when a
+candidate sits in `verified` for ever, because a trial needs a baseline.
+
+Season creation requires an administrator account; signing in as a competitor does not grant that
+role. `scripts/dev/grant-admin.sh` is the local way to get one.
 
 Follow the submitted model's phase, its trial ID, then its finished match history
 and leaderboard entry. This is stronger evidence of a working stack than a
@@ -100,17 +120,26 @@ successful health probe alone.
 After editing package definitions, reload them:
 
 ```sh
-docker compose run --rm loader
+docker compose --profile build build     # rebuild the package image you edited
+docker compose run --rm loader           # install it into the node that runs it
 ```
 
-Database initialization scripts run only on fresh volumes. Reloading packages
-does not apply pending schema migrations to an existing database; follow the
-migration procedure appropriate to that development checkout.
+**Rebuild the image, then reload.** There is no volume between a package and the loader any more —
+it is mounted straight from the image — so a reload with no rebuild installs the previous build and
+fails like a bug in your change. Rebuild after editing a plugin or the engine and re-run
+`./scripts/setup/init.sh` to re-sign, or the node comes up `degraded` with the channel quarantined.
+
+Reloading packages does not apply schema migrations. `db-bootstrap` applies them only when the
+platform database is **empty** — the schema is pre-release and `0001_init.sql` is rewritten in place
+rather than extended, and re-running it over an existing schema is an error rather than an upgrade —
+so it refuses a rewrite and names `scripts/dev/resync-dev-schema.sh`, which drops the schema, lets
+bootstrap apply and seed it afresh, and puts `users` and `sessions` back so your sign-in survives.
 
 Stop services with `docker compose stop`. Match workers are configured to drain,
 but a forced shutdown can still require claim recovery. Avoid deleting volumes
-unless you intend to discard local history. The development schema resync script
-is guarded repair tooling, not a production migration mechanism.
+unless you intend to discard local history. The resync script above is guarded
+development repair, not a production migration mechanism, and it refuses populated
+ladder data.
 
 ## When nothing plays
 
@@ -125,6 +154,8 @@ is guarded repair tooling, not a production migration mechanism.
 | Models cannot load | The bucket's TWO endpoints — an upload is signed for the public one and a node dials the internal one — plus store credentials |
 | Matches play but cannot finish | Replay bucket, upload connectivity, current claim and lease |
 | Results exist but ratings do not move | Counting clock; confirm the match is not an unrated trial |
+| A channel or plugin is quarantined | The component's Ed25519 signature. Re-run `./scripts/setup/init.sh` after any plugin or engine rebuild |
+| A package edit had no effect | Whether you rebuilt its image. The loader mounts the image, not your checkout — unless `docker-compose.dev.yml` is in the `-f` list |
 
 Use `docker compose logs` for the relevant service and keep model/match IDs in
 reports. A cloud deployment, TLS ingress, live R2 verification, and autoscaling

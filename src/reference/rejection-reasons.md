@@ -26,7 +26,8 @@ These occur before a new version is successfully recorded.
 | `repo_unverified` | GitHub did not confirm who owns the repository — it may not exist, or we are briefly rate-limited | Check the spelling; if it is right, try again shortly |
 | `repo_private` | The repository is private, and release assets are fetched without a token | Make it public, or publish from one that is |
 | `repo_not_owned` | GitHub says the repository belongs to a different account | Use one your signed-in account owns, or an organisation the season allows |
-| `repo_taken` | That repository already has a model on it | One repository is one model, platform-wide; submit a release to it |
+| `repo_taken` | That repository already has a model on it, and it is not yours | One repository is one model, platform-wide |
+| `repo_taken_by_you` | You already have a model on that repository | Submit a release to the model you have rather than making a second one |
 | `model_name_taken` | You already have a model with that name | Names are how yours are told apart |
 | `401` / `session_revoked` | Session absent, invalid, expired, or revoked | Sign in again |
 
@@ -59,7 +60,6 @@ That is why it reports the instant you may retry rather than a yes or no.
 | `OPSET_UNSUPPORTED` | Opset outside deployed policy | Export within the supported range |
 | `OP_NOT_ALLOWED` | Graph uses an operator this season does not allow | Inspect the exported nodes, including `If`/`Loop`/`Scan` bodies, and use supported operations |
 | `CLASS_NOT_OFFERED` | It measured into a weight class this season does not run | Reach a class the season offers — this is not the same as being too large |
-| `CLASS_FULL` | You already hold the season's limit of models in that class | Retire one in that class, or aim at another |
 | `PARAMS_EXCEEDED` | More parameters than this season allows | Reduce the parameter count, not only the bytes. The count is every value the document carries, wherever it carries it |
 | `TOO_SLOW` | Slower than this season's inference ceiling | Rare: most seasons set none. Simplify the graph |
 
@@ -72,11 +72,16 @@ A slow graph does not automatically move to a larger class. See
 |---|---|---|
 | `ADAPTER_INVALID` | An adapter did not produce a tensor the graph takes, or produced none for a declared input | Check operators, scopes, dtypes and shapes. A misspelt operator fails here, not at load |
 | `ADAPTER_OVER_BUDGET` | An adapter exceeds its operation budget on a reference observation | Measure cases and reduce the work — [the budget](../models/adapters/budget.md) |
+| `HEAD_UNREADABLE` | The policy output is not a shape the referee can read | It must be rank 2 or rank 4 — `[N, 5]` or `[1, 5, H, W]`. See [the two head shapes](../models/actions.md#the-two-head-shapes) |
 
 `ADAPTER_OVER_BUDGET` and `ADAPTER_INVALID` are deliberately different words: "too expensive" and
-"wrong" must not read the same. The detail carries the failing case index. Reproduce both with
+"wrong" must not read the same. The detail carries the failing case index. Reproduce all three with
 [`tinybrains check`](../models/testing.md#check-it-the-way-admission-will), which measures what
 admission measures.
+
+**Every rejection carries a `detail` beside the word** — the failing case index, the operator name,
+the two hashes, the byte counts, the stage that stopped. The word is what a version page shows; the
+detail is what tells you which observation or which node it was.
 
 ## Trials and administrative outcomes
 
@@ -86,13 +91,25 @@ admission measures.
 | `FAULT:<reason>` | Failed trial attributed to the candidate seat | Investigate the underlying model fault |
 | `UNPLAYABLE` | Trial repair limit exhausted | Check whether failures came from the model or infrastructure |
 | `SEASON_CLOSED` | Waiting candidate could not proceed after closure | Enter an eligible later season |
-| `TIMED_OUT` | Admission exhausted attempts without completing verification | Check service availability before a new tagged submission |
+| `TIMED_OUT` | Admission exhausted attempts without completing verification | Not your model. Check service availability before a new tagged submission |
+
+A **queued match** that is withdrawn carries its own word rather than a rejection: `withdrawn_reason`
+is `SEASON_CLOSED` when the season closed under it, `ENGINE_RETIRED` when the season's engine moved,
+and names the successor when your own next version replaced you. A withdrawn match is not a loss and
+changes no rating — see [the life of a version](../competing/version-life.md).
 
 ## Platform-side retries
 
 A storage failure, a node that cannot be reached, or a game whose registration is incomplete leaves
 a candidate `testing` while admission retries — and **does not spend one of your three attempts**.
-An eventual timeout does not establish that the neural network is invalid.
+An eventual timeout does not establish that the neural network is invalid. The words in this class
+are `PROBE_UNREACHABLE` and `ADMISSION_UNREACHABLE`, which say a node could not be reached, and
+`MANIFEST_INCOMPLETE` and `SEASON_RULES_INCOMPLETE`, which are guards against the platform rejecting
+you for its own missing configuration and are meant never to reach you at all.
+
+**The table above is what the platform publishes, not the whole of what it can emit.** A stage
+failure is worded by upper-casing the stage that stopped, so a word ending `_FAILED` that is not
+listed here is still a stage name rather than a blank — read the `detail` and report it.
 
 `ARTIFACT_MISSING` and `MANIFEST_MISSING` are **not** in this class, although they look like it.
 An empty bucket is your submission's state, not the platform's, and no amount of retrying makes

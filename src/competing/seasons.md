@@ -33,7 +33,9 @@ without anything in the platform changing between them.
 - A **participant list** of GitHub usernames — a class, a lab, an invited cohort.
   The list is matched at each submission rather than resolved once when the season
   was created, so someone who signs in for the first time halfway through the term
-  is admitted without an edit.
+  is admitted without an edit. The list itself is **not public**: the API reports
+  `participants` as `{"enabled": true}` and nothing more, because the roster names
+  people. Every other rule is published in full.
 - **Which organisations count as yours**, for competitors entering from a shared
   account rather than a personal one.
 

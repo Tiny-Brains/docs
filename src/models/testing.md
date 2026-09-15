@@ -21,9 +21,20 @@ though a seat with no ants normally stops being called. Owners in `hills` and `f
 `tinybrains` is the platform's command-line tool: it plays matches on your machine and makes
 admission's own measurements without a server. **It links the two libraries a node links** —
 `datalogic-rs` for your manifest's adapters and `tract-onnx` for the graph — so what it reports is
-what the platform will report, and not a local approximation of it. Until a release is cut it is
-built from source; [drill](https://github.com/Tiny-Brains/drill) explains the checkout it needs, and
-is the place to run it from.
+what the platform will report, and not a local approximation of it.
+
+Until a release is cut it is built from source, and the game comes from a checkout beside it:
+
+```sh
+git clone https://github.com/Tiny-Brains/ants
+git clone https://github.com/Tiny-Brains/devops
+cargo install --path devops/cli
+```
+
+[drill](https://github.com/Tiny-Brains/drill) is the place to run it from: match files, the sample
+models, and the board catalogue as the engine ships it. `tinybrains games` prints what is registered
+and at which engine digest, which is the first thing to check when a local result disagrees with a
+ladder one.
 
 ### Check it the way admission will
 
@@ -93,6 +104,49 @@ baselines, itself, or last week's version on your own machine, through the real 
 real evaluator. Every run prints the mean operations and inference per seat-turn, and what fraction
 of the turn the worst one used.
 
+### Train against the real engine
+
+```sh
+tinybrains env
+```
+
+**This is the answer to encoding the game twice.** A training loop needs to step the world, and
+writing a second implementation of the rules in Python is how a model ends up strong against your
+copy of the game and weak against the real one. `env` puts the actual cartridge behind a JSON Lines
+protocol on stdin and stdout, one object per line: the first line out is a `hello` carrying the
+engine digest and the evaluator's version, then `{"op": "observe"}` returns every live seat's
+observation and `{"op": "step", "actions": [...]}` advances them, with finished matches reported in
+`ended` and replaced from the pool.
+
+```jsonc
+← {"ok":true,"hello":{"game":"ants","engine_digest":"sha256:…","presets":[…],"waves":4}}
+→ {"op":"observe"}
+← {"ok":true,"turn":0,"seats":[{"w":0,"m":0,"ep":0,"seat":0,"obs":{…}},…],"scores":[…],"ended":[]}
+→ {"op":"step","actions":["NNE-","-W",…]}
+← {"ok":true,"turn":1,"seats":[…],"scores":[…],"ended":[{"ep":3,"ranks":[1,2],"reason":"lone_survivor",…}]}
+→ {"op":"close"}
+```
+
+It runs a pool of waves so a batch of matches advances together, and every error is fatal — one
+`{"ok": false, "error": …}` line and exit, because a loop that has lost the seat order has no
+correct way to carry on and a recoverable-looking failure is how a run quietly trains on misaligned
+actions. Record the `hello` line's digest in your model card: an entry that cannot name the engine
+it trained against cannot be reproduced.
+
+**`env` is not the referee.** It has no turn deadline, no strike ceiling and no adapter evaluation —
+it steps the world and nothing else. A result from it is not a result; `tinybrains check` and a
+played match are the gates.
+
+### Get the boards
+
+```sh
+tinybrains maps                  # every preset, its dimensions and generation inputs
+tinybrains maps export ants out  # write them out, byte-for-byte as the engine ships them
+```
+
+Useful for building a curriculum, or for asserting that a board your trainer generated is one the
+ladder actually plays.
+
 ### Prove a replay reproduces
 
 ```sh
@@ -112,6 +166,7 @@ own entry: a difference means the two engines disagree, which is a bug worth rep
 | Whether your files are where the platform expects | The platform reads them from the bucket you upload to, not from your disk |
 | Whether a late-game turn fits the budget | The reference set is ten observations. A crowded board can cost more than any of them |
 | How your entry rates | That is the ladder's, over many matches against many opponents |
+| Whether your head is a shape the referee can read | `check` decodes it, so this one *is* covered — but only `check` covers it. `env` does not evaluate a manifest at all |
 
 ## Check the actions too
 

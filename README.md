@@ -87,7 +87,7 @@ an example file, relative to the page, and `studio/studio.py` expands it on ever
 
 ```text
 {{#studio studio/foe-positions.json}}          the example's logic as a JSON block, then its link
-{{#studio studio/flat-index.json nocode}}      the link alone, when the prose already shows the code
+{{#studio studio/own-hills.json nocode}}       the link alone, when the prose already shows the code
 {{#studio studio/baseline-in.json embed}}      the code, the Studio itself in the page, then the link
 ```
 
@@ -118,7 +118,7 @@ All commands run from this repository's root.
 mdbook build                # the whole check: no test suite, no linter
 mdbook serve                # preview at http://localhost:3000
 tutorials/build.sh          # boards -> replays -> src/tutorials, and re-vendor the viewer
-python3 studio/studio.py link src/models/adapters/studio/flat-index.json   # one example's link
+python3 studio/studio.py link src/models/adapters/studio/foe-positions.json   # one example's link
 ```
 
 `mdbook build` fails on a `SUMMARY.md` entry with no file behind it, and on a `{{#studio}}`
@@ -252,6 +252,58 @@ site's components without an `!important` in sight.
   its `engine_digest` disagrees with the viewer's.
 
 ## Status
+
+**15 September 2026 — the book is audited against the running platform, and nothing in it describes
+a shipped thing as unbuilt.** Fourteen pages changed. Three said something the implementation
+contradicts: `competing/replays.md` said the browser replay viewer did not exist and that the
+decoder wanted a packed `state0` — three lines above an embedded, working viewer, and `state0`
+appears nowhere in Ants — so that section is now how to watch one (the site, `tinybrains view`,
+`tinybrains conform`) and the envelope's fields are listed in full, including the per-seat strikes
+and inference that explain most disappointing results. `competing/matches.md` said an owner-scoped
+listing of every other match state was not implemented; `GET /v1/me/matches` is exactly that.
+`competing/submitting.md` told a competitor to paste a `fetch()` into the console because the shell
+had no form; `/submit` has been a finished form since this morning, upload step included. The
+"sign-in and API probes" description of Web is gone from all five places it appeared.
+
+**The platform section was a release behind.** `running-locally.md` still copied packages into
+volumes (they are mounted `type: image` now, so there is no volume to repopulate), still said
+`docker compose up --build`, which does not build a package image because they sit on the `build`
+profile, still hand-rolled `.env` where `scripts/setup/init.sh` now does every credential and
+signature, and still described Postgres's init directory where `db-bootstrap` now applies the
+migrations and refuses a rewrite it cannot apply. It gains the Docker 28 / Compose v2.32 floor that
+image mounts need, the fleet overlay, and two rows in *When nothing plays*. `repositories.md` said
+Jodi and Kalam commit their generated JSON and that Kalam vendors the Ants component — neither is
+true since 10 September, and the second is backwards: rebuilding Ants is now precisely what moves
+the engine Kalam plays. Its table said "seven" over six rows and omitted the four repositories a
+competitor can actually read; they have a table of their own now. `contributing.md` carried the same
+two wrong conventions, and `adding-a-game.md` said component signing was incomplete when it is
+enforced.
+
+**Two capabilities the book never mentioned.** `tinybrains env` — the real cartridge behind a JSON
+Lines protocol, so a training loop steps the engine the ladder plays instead of a second
+implementation in Python — is documented on the testing page with its handshake, its pool, and the
+warning that it is not the referee. And `Tiny-Brains/ants-starter`, a trained nano entry that admits
+unchanged, is the quickstart's short path, which is what the site's own onboarding has said since
+11 September. `tinybrains games` and `tinybrains maps` are named too; the CLI has nine commands and
+the book documented five.
+
+**The API reference was missing nine routes**: the game detail and the submission preflight (both
+already cited by other pages), `/v1/me/matches`, `PATCH /v1/me`, the two session routes, the public
+profile, `/v1/status`, and the season edit. Three field lists were behind — a leaderboard entry's
+`version_id`, `model`, `repo`, `baseline` and the body's `total`; a season's `weight_classes` and
+its five counts; a version's `class_max_bytes`, `baseline`, `last_played_at` and `orion_version` by
+name. **The nine cached reads are now documented**, because a competitor is told on three pages to
+poll a version's status and that read is ten seconds old. `reference/rejection-reasons.md` gains
+`HEAD_UNREADABLE` (the policy head must be rank 2 or 4 — the one competitor-facing rejection the
+book did not name), `repo_taken_by_you`, `ENGINE_RETIRED`, and the retry-class words; it loses
+`CLASS_FULL`, which exists in no repository.
+
+Every value was re-verified against its producer rather than assumed, and all of them were already
+right: the adapter budget, turn limits and the three Ants radii against `cartridge.json` and the
+engine source, the five class boundaries against the seasons table, opsets 13–19 and all 74
+allowlisted operators against the DevOps template, and every rating and scheduling number against
+Jodi's `config.md`. `mdbook build` is clean, all 38 internal anchor links resolve, and the eight
+replays still agree with the vendored viewer at `sha256:185a2845…`.
 
 **11 September 2026 — a leaderboard entry's `trend` and `history` are in the API reference.**
 Soma has carried `trend` since the entry split and gains `history` today, the last twelve ratings

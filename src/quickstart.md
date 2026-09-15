@@ -7,30 +7,52 @@ its decisions using match results.
 ## What you need
 
 You need a GitHub account, a public repository with release assets, a way to train
-and export an ONNX model, and an adapter for Ants. Check the game's
+and export an ONNX model, and a manifest for Ants. Check the game's
 [seasons](competing/seasons.md) before preparing an entry: submissions must arrive
 inside an open window and satisfy that season's participation rules.
 
-The submission and match loop is implemented. There is no packaged training SDK;
-the `tinybrains` command-line tool, built from source until a release is cut,
-plays matches and runs admission's checks on your own machine. The steps below
-use the existing file contracts and HTTP API. You do not need to operate the
-platform to enter a hosted competition.
+The `tinybrains` command-line tool — built from source until a release is cut — plays matches, runs
+admission's checks, and exposes the real cartridge as a
+[training environment](models/testing.md#train-against-the-real-engine), so a training loop drives
+the engine the ladder plays rather than a second implementation of it. You do not need to operate
+the platform to enter a hosted competition.
 
-## 1. Train something small
+## The short way: start from a working entry
+
+[**`Tiny-Brains/ants-starter`**](https://github.com/Tiny-Brains/ants-starter) is a trained **nano**
+entry that is admitted unchanged, with its generated manifest, the `metrics.json` and `card.md` the
+platform measures, two match files, and a CI workflow that re-checks it on every push.
+
+```sh
+git clone https://github.com/Tiny-Brains/ants-starter
+cd ants-starter
+tinybrains check model.onnx manifest.json      # what admission will say
+tinybrains matches/self-play.json              # play it against itself, through the real engine
+python train.py                                # retrain it: about an hour
+```
+
+Submit it as-is to watch the whole loop end to end, then change something and retrain. It is not one
+of the platform's baselines — it was trained with its own seed, so the ladder takes it as a new
+entry. The rest of this page is the same journey starting from nothing.
+
+## The long way
+
+### 1. Train something small
 
 Read [Ants](games/ants.md), then decide how to represent the
 [observation](models/observation.md). For example, a spatial model can consume
 planes for your ants, visible enemies, food, and known water and produce five
 move scores per ant or per board square.
 
-Train using the same information the arena supplies. Export to `model.onnx`, with named tensor
-inputs and outputs that your manifest can name. Check the
+Train using the same information the arena supplies — and preferably against the same engine, by
+driving [`tinybrains env`](models/testing.md#train-against-the-real-engine) rather than writing the
+rules again in Python. Export to `model.onnx`, with named tensor inputs and outputs that your
+manifest can name. Check the
 [model requirements](models/format.md) and [size classes](models/weight-classes.md)
 before committing to an architecture. Export success alone does not establish
 admission compatibility.
 
-## 2. Write the manifest
+### 2. Write the manifest
 
 Create `manifest.json`: it declares each of your graph's inputs and outputs by name, dtype and
 shape, and carries one **adapter** per input — a small program that turns the observation into that
@@ -45,7 +67,7 @@ Run the pair through [local checks](models/testing.md). Exercise all three map s
 large colonies, and fragmented known-water masks. Check the operation counts and the actual actions,
 not only whether execution returns.
 
-## 3. Publish a GitHub release
+### 3. Publish a GitHub release
 
 Attach the files under the exact names `model.onnx` and `manifest.json` to a public release, as the
 record of what you entered. Compute SHA-256 hashes of those exact bytes:
@@ -61,10 +83,12 @@ shasum -a 256 model.onnx manifest.json
 Keep the files unchanged after hashing. The submission uses `sha256:` followed by each file's 64
 hexadecimal digits.
 
-## 4. Create the model, then submit to it
+### 4. Create the model, then submit to it
 
-Sign in through the competition's GitHub sign-in flow. A model is your entry: one
-repository, a name, and every release you enter from it. Create it once:
+Sign in through the competition's GitHub sign-in flow, and the site's `/submit` form will do all of
+this for you — it creates the model if you have none and hands you the upload commands afterwards.
+Made directly, it is two calls. A model is your entry: one repository, a name, and every release you
+enter from it. Create it once:
 
 ```json
 POST /v1/games/ants/models
@@ -98,9 +122,10 @@ empty is rejected `ARTIFACT_MISSING`. It re-hashes what arrives against what you
 usage and error handling, and [Models and versions](competing/models.md) for why
 the two calls are separate.
 
-## 5. Watch the trial
+### 5. Watch the trial
 
-Read `GET /v1/versions/{version_id}`. Its `phase` distinguishes waiting for verification
+Watch it on the version's page, or read `GET /v1/versions/{version_id}` — that read is cached for
+ten seconds, so poll no faster. Its `phase` distinguishes waiting for verification
 from waiting for a trial. If admission succeeds, status becomes `verified`, then
 `active` after a successful trial. **Losing the trial is fine**; forfeiting it is
 not. The trial checks playability and never changes ratings.
