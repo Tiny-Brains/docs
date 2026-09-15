@@ -12,7 +12,7 @@ expires; keep the match ID as the stable reference, not the signed URL.
 
 A null replay URL can be normal for queued, cancelled, or failed work that never
 produced a replay. A successful match's detail also supplies the preset, seed,
-engine digest, evaluator digest, and per-seat result.
+engine digest, Orion version, and per-seat result.
 
 ## What is stored
 
